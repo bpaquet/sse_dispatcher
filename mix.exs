@@ -29,8 +29,8 @@ defmodule SSEDispatcher.MixProject do
 
   defp deps do
     [
-       {:plug_cowboy, "~> 2.0"},
-       {:phoenix_pubsub, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:phoenix_pubsub, "~> 2.0"}
     ]
   end
 end

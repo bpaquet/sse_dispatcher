@@ -3,12 +3,12 @@ defmodule Sse do
   import Plug.Conn
   use Plug.Router
 
-  plug :match
-  plug :dispatch
+  plug(:match)
+  plug(:dispatch)
 
   get "/sse/:topic" do
     conn = put_resp_header(conn, "content-type", "text/event-stream")
-    conn = put_resp_header(conn, "Access-Control-Allow-Origin","*")
+    conn = put_resp_header(conn, "Access-Control-Allow-Origin", "*")
     conn = send_chunked(conn, 200)
 
     Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
@@ -20,8 +20,11 @@ defmodule Sse do
 
   defp loop(conn) do
     receive do
-      {:pubsub_message, msg} -> send_message(conn, msg); loop(conn)
-      after 300000 -> :timeout
+      {:pubsub_message, msg} ->
+        send_message(conn, msg)
+        loop(conn)
+    after
+      300_000 -> :timeout
     end
   end
 
