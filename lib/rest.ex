@@ -3,6 +3,7 @@ defmodule Rest do
   require Node
   import Plug.Conn
   use Plug.Router
+  plug(MetricsPlugExporter)
 
   plug(:match)
   plug(:dispatch)

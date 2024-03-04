@@ -20,6 +20,8 @@ defmodule SSEDispatcher.Application do
       {Plug.Cowboy, scheme: :http, plug: Sse, options: [port: sse_port]}
     ]
 
+    MetricsPlugExporter.setup()
+
     opts = [strategy: :one_for_one, name: SSEDispatcher.Supervisor]
     Supervisor.start_link(add_cluster_supervisor(children), opts)
   end
