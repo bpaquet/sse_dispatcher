@@ -15,6 +15,7 @@ defmodule SSEDispatcher.MixProject do
   def releases do
     [
       sse_dispatcher: [
+        include_executables_for: [:unix],
         applications: [sse_dispatcher: :permanent]
       ]
     ]
@@ -30,7 +31,8 @@ defmodule SSEDispatcher.MixProject do
   defp deps do
     [
       {:plug_cowboy, "~> 2.0"},
-      {:phoenix_pubsub, "~> 2.0"}
+      {:phoenix_pubsub, "~> 2.0"},
+      {:libcluster, "~> 3.0"}
     ]
   end
 end

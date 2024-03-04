@@ -1,5 +1,6 @@
 defmodule Rest do
   require Logger
+  require Node
   import Plug.Conn
   use Plug.Router
 
@@ -10,6 +11,14 @@ defmodule Rest do
     conn
     |> put_resp_header("content-type", "text/html")
     |> send_file(200, "priv/static/sse.html")
+  end
+
+  get "/nodes" do
+    nodes = Node.list()
+
+    conn
+    |> put_resp_header("content-type", "text/html")
+    |> send_resp(200, "Current node: #{node()}\r\nNodes: #{inspect(nodes)}\r\n")
   end
 
   get "/favicon.ico" do
