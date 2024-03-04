@@ -19,7 +19,7 @@ defmodule Rest do
 
   post "/publish/:topic" do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
-    :ok = Phoenix.PubSub.broadcast(SSEDispatcher.PubSub, topic, {:pubsub_message, body})
+    :ok = Phoenix.PubSub.broadcast!(SSEDispatcher.PubSub, topic, {:pubsub_message, body})
     Logger.info("Message published on topic: #{topic}")
 
     conn
