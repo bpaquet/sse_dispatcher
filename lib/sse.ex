@@ -3,6 +3,8 @@ defmodule Sse do
   import Plug.Conn
   use Plug.Router
 
+  plug(:monitor_sse)
+
   plug(:match)
   plug(:dispatch)
 
@@ -15,6 +17,7 @@ defmodule Sse do
     Logger.info("Client subscribed to #{topic}")
 
     loop(conn)
+    Logger.info("Client disconnected from #{topic}")
     conn
   end
 
@@ -22,6 +25,11 @@ defmodule Sse do
     receive do
       {:pubsub_message, msg} ->
         send_message(conn, msg)
+        SSEStats.inc_msg_emitted()
+        loop(conn)
+
+      msg ->
+        Logger.info("Received unknown message: #{inspect(msg)}")
         loop(conn)
     after
       300_000 -> :timeout
@@ -30,5 +38,15 @@ defmodule Sse do
 
   defp send_message(conn, message) do
     chunk(conn, "event: \"message\"\n\ndata: #{message}\n\n")
+  end
+
+  match _ do
+    send_resp(conn, 404, "")
+  end
+
+  defp monitor_sse(conn, _) do
+    {:ok, _pid} = SSEMonitor.start_link(conn)
+
+    conn
   end
 end

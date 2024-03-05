@@ -21,6 +21,7 @@ defmodule SSEDispatcher.Application do
     ]
 
     MetricsPlugExporter.setup()
+    SSEStats.setup()
 
     opts = [strategy: :one_for_one, name: SSEDispatcher.Supervisor]
     Supervisor.start_link(add_cluster_supervisor(children), opts)

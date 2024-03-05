@@ -22,11 +22,6 @@ defmodule Rest do
     |> send_resp(200, "Current node: #{node()}\r\nNodes: #{inspect(nodes)}\r\n")
   end
 
-  get "/favicon.ico" do
-    conn
-    |> send_resp(404, ~c"")
-  end
-
   post "/publish/:topic" do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     :ok = Phoenix.PubSub.broadcast!(SSEDispatcher.PubSub, topic, {:pubsub_message, body})
@@ -35,5 +30,9 @@ defmodule Rest do
     conn
     |> put_resp_header("content-type", "text/html")
     |> send_resp(200, "Published #{body} to #{topic}\n")
+  end
+
+  match _ do
+    send_resp(conn, 404, "")
   end
 end
