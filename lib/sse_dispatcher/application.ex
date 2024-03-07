@@ -8,8 +8,8 @@ defmodule SSEDispatcher.Application do
   @impl true
   @spec start(any(), any()) :: {:error, any()} | {:ok, pid()}
   def start(_type, _args) do
-    {sse_port, _} = Integer.parse(System.get_env("SSE_PORT") || "4000")
-    {rest_port, _} = Integer.parse(System.get_env("REST_PORT") || "3000")
+    {:ok, sse_port} = Application.fetch_env(:sse_dispatcher, :sse_port)
+    {:ok, rest_port} = Application.fetch_env(:sse_dispatcher, :rest_port)
     Logger.info("Current host #{node()}")
     Logger.info("Starting SSEDispatcher on port #{sse_port} for SSE and #{rest_port} for REST")
 

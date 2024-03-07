@@ -14,10 +14,10 @@ defmodule Sse do
     conn = send_chunked(conn, 200)
 
     Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
-    Logger.info("Client subscribed to #{topic}")
+    Logger.debug("Client subscribed to #{topic}")
 
     loop(conn)
-    Logger.info("Client disconnected from #{topic}")
+    Logger.debug("Client disconnected from #{topic}")
     conn
   end
 
@@ -26,10 +26,6 @@ defmodule Sse do
       {:pubsub_message, msg} ->
         send_message(conn, msg)
         SSEStats.inc_msg_emitted()
-        loop(conn)
-
-      msg ->
-        Logger.info("Received unknown message: #{inspect(msg)}")
         loop(conn)
     after
       300_000 -> :timeout
