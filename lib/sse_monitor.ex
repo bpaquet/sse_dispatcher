@@ -8,19 +8,19 @@ defmodule SSEMonitor do
 
   @impl true
   def init(conn) do
-    SSEStats.inc_sse_connections()
+    SSEStats.inc_connections()
     Process.flag(:trap_exit, true)
     {:ok, %{conn: conn}}
   end
 
   @impl true
   def terminate(:normal, _) do
-    SSEStats.dec_sse_connections()
+    SSEStats.dec_connections()
     Logger.debug("SSE Standard end")
   end
 
   def terminate(reason, _) do
-    SSEStats.dec_sse_connections()
+    SSEStats.dec_connections()
     Logger.debug("SSE end: #{reason}")
   end
 end

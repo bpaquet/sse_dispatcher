@@ -23,7 +23,7 @@ defmodule Main do
     {:ok, number_of_messages_min} = Application.fetch_env(:load_test, :number_of_messages_min)
     {:ok, number_of_messages_max} = Application.fetch_env(:load_test, :number_of_messages_max)
 
-    Logger.info("Starting load test with #{nb_user} users")
+    Logger.warning("Starting load test with #{nb_user} users")
 
     Enum.map(1..nb_user, fn _ ->
       Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->

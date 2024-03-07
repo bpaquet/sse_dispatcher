@@ -10,8 +10,8 @@ defmodule SSEDispatcher.Application do
   def start(_type, _args) do
     {:ok, sse_port} = Application.fetch_env(:sse_dispatcher, :sse_port)
     {:ok, rest_port} = Application.fetch_env(:sse_dispatcher, :rest_port)
-    Logger.info("Current host #{node()}")
-    Logger.info("Starting SSEDispatcher on port #{sse_port} for SSE and #{rest_port} for REST")
+    Logger.warning("Current host #{node()}")
+    Logger.warning("Starting SSEDispatcher on port #{sse_port} for SSE and #{rest_port} for REST")
 
     children = [
       {Phoenix.PubSub,

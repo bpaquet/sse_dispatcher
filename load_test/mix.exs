@@ -7,7 +7,17 @@ defmodule LoadTest.MixProject do
       version: "0.1.0",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      releases: releases()
+    ]
+  end
+
+  def releases do
+    [
+      load_test: [
+        include_executables_for: [:unix],
+        applications: [load_test: :permanent]
+      ]
     ]
   end
 

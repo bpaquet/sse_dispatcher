@@ -9,8 +9,8 @@ defmodule LoadTest.Application do
   @spec start(any(), any()) :: {:error, any()} | {:ok, pid()}
   def start(_type, _args) do
     {:ok, port} = Application.fetch_env(:load_test, :port)
-    Logger.info("Current host #{node()}")
-    Logger.info("Starting Load test on port #{port}")
+    Logger.warning("Current host #{node()}")
+    Logger.warning("Starting Load test on port #{port}")
 
     children = [
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: port]},

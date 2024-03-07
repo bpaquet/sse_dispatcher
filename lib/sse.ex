@@ -25,7 +25,7 @@ defmodule Sse do
     receive do
       {:pubsub_message, msg} ->
         send_message(conn, msg)
-        SSEStats.inc_msg_emitted()
+        SSEStats.inc_msg_published()
         loop(conn)
     after
       300_000 -> :timeout

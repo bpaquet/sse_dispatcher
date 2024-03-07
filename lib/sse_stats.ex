@@ -3,40 +3,36 @@ defmodule SSEStats do
 
   def setup() do
     Gauge.declare(
-      name: :sse_current_connections,
+      name: :current_connections,
       help: "SSE Open connections"
     )
 
-    Counter.declare(
-      name: :sse_connections,
+    Gauge.declare(
+      name: :connections,
       help: "SSE connections"
     )
 
-    Counter.declare(
-      name: :sse_msg_received,
-      help: "SSE Messages received"
-    )
-
-    Counter.declare(
-      name: :sse_msg_emitted,
-      help: "SSE Messages emitted"
+    Gauge.declare(
+      name: :messages,
+      labels: [:kind],
+      help: "SSE Messages"
     )
   end
 
-  def inc_sse_connections() do
-    Gauge.inc(name: :sse_current_connections)
-    Counter.inc(name: :sse_connections)
+  def inc_connections() do
+    Gauge.inc(name: :current_connections)
+    Gauge.inc(name: :connections)
   end
 
-  def dec_sse_connections() do
-    Gauge.dec(name: :sse_current_connections)
+  def dec_connections() do
+    Gauge.dec(name: :current_connections)
   end
 
   def inc_msg_received() do
-    Counter.inc(name: :sse_msg_received)
+    Gauge.inc(name: :messages, labels: [:received])
   end
 
-  def inc_msg_emitted() do
-    Counter.inc(name: :sse_msg_emitted)
+  def inc_msg_published() do
+    Gauge.inc(name: :messages, labels: [:published])
   end
 end

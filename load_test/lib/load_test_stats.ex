@@ -7,39 +7,20 @@ defmodule LoadTestStats do
       help: "User running"
     )
 
-    Counter.declare(
-      name: :message_received_ok,
-      help: "Message received ok"
+    Gauge.declare(
+      name: :messages,
+      labels: [:kind, :status],
+      help: "Messages counter"
     )
 
-    Counter.declare(
-      name: :message_received_error,
-      help: "Message received error"
+    Gauge.declare(
+      name: :users,
+      labels: [:status],
+      help: "User counter"
     )
 
-    Counter.declare(
-      name: :message_published_ok,
-      help: "Message published ok"
-    )
-
-    Counter.declare(
-      name: :message_published_error,
-      help: "Message published error"
-    )
-
-    Counter.declare(
-      name: :user_ok,
-      help: "User ok"
-    )
-
-    Counter.declare(
-      name: :user_error,
-      help: "User error"
-    )
-
-    Histogram.new(
+    Summary.new(
       name: :propagation_delay,
-      buckets: [1, 5, 15, 50, 100, 250, 500, 1000, 5000, :infinity],
       help: "Propagation delay"
     )
   end
@@ -53,30 +34,30 @@ defmodule LoadTestStats do
   end
 
   def inc_msg_received_ok() do
-    Counter.inc(name: :message_received_ok)
+    Gauge.inc(name: :messages, labels: [:received, :ok])
   end
 
   def inc_msg_received_error() do
-    Counter.inc(name: :message_received_error)
+    Gauge.inc(name: :messages, labels: [:received, :error])
   end
 
   def inc_user_ok() do
-    Counter.inc(name: :user_ok)
+    Gauge.inc(name: :users, labels: [:ok])
   end
 
   def inc_user_error() do
-    Counter.inc(name: :user_error)
+    Gauge.inc(name: :users, labels: [:error])
   end
 
   def inc_msg_published_ok() do
-    Counter.inc(name: :message_published_ok)
+    Gauge.inc(name: :messages, labels: [:published, :ok])
   end
 
   def inc_msg_published_error() do
-    Counter.inc(name: :message_published_error)
+    Gauge.inc(name: :messages, labels: [:published, :error])
   end
 
   def observe_propagation(delay) do
-    Histogram.observe([name: :propagation_delay], delay)
+    Summary.observe([name: :propagation_delay], delay)
   end
 end
