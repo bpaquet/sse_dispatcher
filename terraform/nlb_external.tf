@@ -54,8 +54,8 @@ resource "aws_lb_target_group" "external" {
   vpc_id   = data.aws_subnet.first_public.vpc_id
 
   health_check {
-    path     = "/"
-    port     = 3000
+    path     = "/ping"
+    port     = 4000
     protocol = "HTTP"
     interval = 10
   }

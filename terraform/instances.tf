@@ -2,7 +2,7 @@ locals {
   user_data = <<-EOF
 #!/bin/bash -e
 
-yum install -y ncurses-compat-libs git
+yum install -y ncurses-compat-libs git jq
 wget https://binaries2.erlang-solutions.com/centos/7/esl-erlang_26.2.1_1~centos~7_x86_64.rpm -O /tmp/esl-erlang_26.2.1_1~centos~7_x86_64.rpm
 rpm -ivh /tmp/esl-erlang_26.2.1_1~centos~7_x86_64.rpm
 
@@ -27,7 +27,19 @@ mix deps.get
 
 MIX_ENV=prod mix release
 
-_build/prod/rel/sse_dispatcher/bin/sse_dispatcher start
+_build/prod/rel/sse_dispatcher/bin/sse_dispatcher daemon
+
+aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.dd_secret} | jq -r .SecretString > /tmp/secret
+
+DD_API_KEY="$(cat /tmp/secret)" DD_HOST_TAGS="${var.dd_tags}" bash -c "$(curl -L https://s3.amazonaws.com/dd-agent/scripts/install_script_agent7.sh)"
+
+echo "instances:
+  - prometheus_url: http://localhost:3000/metrics
+    namespace: sse_dispatcher
+    metrics:
+    - '*'
+" >> /etc/datadog-agent/conf.d/prometheus.d/conf.yaml
+service datadog-agent restart
 EOF
 }
 
@@ -60,6 +72,31 @@ EOF
 resource "aws_iam_role_policy_attachment" "sse_dispatcher_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   role       = aws_iam_role.sse_dispatcher.name
+}
+
+resource "aws_iam_role_policy_attachment" "sse_dispatcher_policy" {
+  policy_arn = aws_iam_policy.sse_dispatcher_policy.arn
+  role       = aws_iam_role.sse_dispatcher.name
+}
+
+resource "aws_iam_policy" "sse_dispatcher_policy" {
+  name = "${var.prefix}-sse-dispatcher-policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": "${var.dd_secret}"
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_launch_template" "sse_dispatcher" {
@@ -111,23 +148,13 @@ resource "aws_security_group_rule" "sse_dispatcher_outbound" {
 }
 
 
-resource "aws_security_group_rule" "sse_dispatcher_inbound_3000_internal" {
+resource "aws_security_group_rule" "sse_dispatcher_inbound_3000" {
   type      = "ingress"
   from_port = 3000
   to_port   = 3000
   protocol  = "tcp"
   # cidr_blocks       = ["0.0.0.0/0"]
   source_security_group_id = aws_security_group.internal_lb.id
-  security_group_id        = aws_security_group.sse_dispatcher.id
-}
-
-resource "aws_security_group_rule" "sse_dispatcher_inbound_3000_external" {
-  type      = "ingress"
-  from_port = 3000
-  to_port   = 3000
-  protocol  = "tcp"
-  # cidr_blocks       = ["0.0.0.0/0"]
-  source_security_group_id = aws_security_group.external_lb.id
   security_group_id        = aws_security_group.sse_dispatcher.id
 }
 
@@ -143,9 +170,9 @@ resource "aws_security_group_rule" "sse_dispatcher_inbound_4000" {
 
 resource "aws_autoscaling_group" "sse_dispatcher" {
   name             = "${var.prefix}-sse-dispatcher"
-  desired_capacity = 2
-  max_size         = 2
-  min_size         = 1
+  desired_capacity = var.desired_capacity
+  max_size         = var.max_size
+  min_size         = var.min_size
 
   vpc_zone_identifier = var.private_subnets
 
@@ -160,6 +187,8 @@ resource "aws_autoscaling_group" "sse_dispatcher" {
     id      = aws_launch_template.sse_dispatcher.id
     version = aws_launch_template.sse_dispatcher.latest_version
   }
+
+  health_check_type = "ELB"
 
   target_group_arns = [
     aws_lb_target_group.external.arn,

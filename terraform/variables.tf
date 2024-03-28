@@ -22,3 +22,27 @@ variable "private_subnets" {
 variable "sse_dispatcher_revision" {
   type = string
 }
+
+variable "dd_secret" {
+  type = string
+}
+
+variable "dd_tags" {
+  type    = string
+  default = ""
+}
+
+variable "desired_capacity" {
+  type    = number
+  default = 1
+}
+
+variable "min_size" {
+  type    = number
+  default = 1
+}
+
+variable "max_size" {
+  type    = number
+  default = 1
+}

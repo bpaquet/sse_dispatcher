@@ -54,7 +54,7 @@ resource "aws_lb_target_group" "internal" {
   vpc_id   = data.aws_subnet.first_private.vpc_id
 
   health_check {
-    path     = "/"
+    path     = "/ping"
     port     = 3000
     protocol = "HTTP"
     interval = 10
