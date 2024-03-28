@@ -14,6 +14,12 @@ defmodule Rest do
     |> send_file(200, "priv/static/sse.html")
   end
 
+  get "/ping" do
+    conn
+    |> put_resp_header("content-type", "text/html")
+    |> send_resp(200, "ok")
+  end
+
   get "/nodes" do
     nodes = Node.list()
 

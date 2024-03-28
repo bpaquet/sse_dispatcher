@@ -8,6 +8,12 @@ defmodule Sse do
   plug(:match)
   plug(:dispatch)
 
+  get "/ping" do
+    conn
+    |> put_resp_header("content-type", "text/html")
+    |> send_resp(200, "ok")
+  end
+
   get "/sse/:topic" do
     conn = put_resp_header(conn, "content-type", "text/event-stream")
     conn = put_resp_header(conn, "Access-Control-Allow-Origin", "*")
