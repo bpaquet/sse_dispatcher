@@ -112,33 +112,33 @@ resource "aws_security_group_rule" "sse_dispatcher_outbound" {
 
 
 resource "aws_security_group_rule" "sse_dispatcher_inbound_3000_internal" {
-  type              = "ingress"
-  from_port         = 3000
-  to_port           = 3000
-  protocol          = "tcp"
+  type      = "ingress"
+  from_port = 3000
+  to_port   = 3000
+  protocol  = "tcp"
   # cidr_blocks       = ["0.0.0.0/0"]
   source_security_group_id = aws_security_group.internal_lb.id
-  security_group_id = aws_security_group.sse_dispatcher.id
+  security_group_id        = aws_security_group.sse_dispatcher.id
 }
 
 resource "aws_security_group_rule" "sse_dispatcher_inbound_3000_external" {
-  type              = "ingress"
-  from_port         = 3000
-  to_port           = 3000
-  protocol          = "tcp"
+  type      = "ingress"
+  from_port = 3000
+  to_port   = 3000
+  protocol  = "tcp"
   # cidr_blocks       = ["0.0.0.0/0"]
   source_security_group_id = aws_security_group.external_lb.id
-  security_group_id = aws_security_group.sse_dispatcher.id
+  security_group_id        = aws_security_group.sse_dispatcher.id
 }
 
 resource "aws_security_group_rule" "sse_dispatcher_inbound_4000" {
-  type              = "ingress"
-  from_port         = 4000
-  to_port           = 4000
-  protocol          = "tcp"
+  type      = "ingress"
+  from_port = 4000
+  to_port   = 4000
+  protocol  = "tcp"
   # cidr_blocks       = ["0.0.0.0/0"]
   source_security_group_id = aws_security_group.external_lb.id
-  security_group_id = aws_security_group.sse_dispatcher.id
+  security_group_id        = aws_security_group.sse_dispatcher.id
 }
 
 resource "aws_autoscaling_group" "sse_dispatcher" {
@@ -149,7 +149,7 @@ resource "aws_autoscaling_group" "sse_dispatcher" {
 
   vpc_zone_identifier = var.private_subnets
 
-instance_refresh {
+  instance_refresh {
     strategy = "Rolling"
     preferences {
       min_healthy_percentage = 50

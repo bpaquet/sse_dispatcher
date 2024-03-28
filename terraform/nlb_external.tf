@@ -26,8 +26,8 @@ resource "aws_lb" "external" {
   internal           = false
   load_balancer_type = "network"
 
-  subnets = var.public_subnets
-  security_groups = [ aws_security_group.external_lb.id]
+  subnets         = var.public_subnets
+  security_groups = [aws_security_group.external_lb.id]
 
   enable_cross_zone_load_balancing = true
 
@@ -54,9 +54,9 @@ resource "aws_lb_target_group" "external" {
   vpc_id   = data.aws_subnet.first_public.vpc_id
 
   health_check {
-    path                = "/"
-    port                = 3000
-    protocol            = "HTTP"
+    path     = "/"
+    port     = 3000
+    protocol = "HTTP"
     interval = 10
   }
 }

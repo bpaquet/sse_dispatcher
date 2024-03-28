@@ -27,7 +27,7 @@ resource "aws_lb" "internal" {
   load_balancer_type = "network"
 
   subnets         = var.private_subnets
-  security_groups = [ aws_security_group.internal_lb.id]
+  security_groups = [aws_security_group.internal_lb.id]
 
   enable_cross_zone_load_balancing = true
 
@@ -54,9 +54,9 @@ resource "aws_lb_target_group" "internal" {
   vpc_id   = data.aws_subnet.first_private.vpc_id
 
   health_check {
-    path                = "/"
-    port                = 3000
-    protocol            = "HTTP"
+    path     = "/"
+    port     = 3000
+    protocol = "HTTP"
     interval = 10
   }
 }
