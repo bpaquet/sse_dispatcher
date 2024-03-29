@@ -12,6 +12,8 @@ config :load_test, sse_base_url: System.get_env("SSE_BASE_URL") || "http://local
 config :load_test,
   rest_base_url: System.get_env("REST_BASE_URL") || "http://localhost:3000/publish"
 
+config :load_test, rest_timeout: String.to_integer(System.get_env("REST_TIMEOUT") || "5000")
+
 config :load_test,
   delay_between_messages_min:
     String.to_integer(System.get_env("DELAY_BETWEEN_MESSAGES_MIN") || "200")

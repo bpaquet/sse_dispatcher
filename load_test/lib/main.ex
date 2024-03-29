@@ -13,6 +13,7 @@ defmodule Main do
     {:ok, sse_base_url} = Application.fetch_env(:load_test, :sse_base_url)
 
     {:ok, rest_base_url} = Application.fetch_env(:load_test, :rest_base_url)
+    {:ok, rest_timeout} = Application.fetch_env(:load_test, :rest_timeout)
 
     {:ok, delay_between_messages_min} =
       Application.fetch_env(:load_test, :delay_between_messages_min)
@@ -23,12 +24,15 @@ defmodule Main do
     {:ok, number_of_messages_min} = Application.fetch_env(:load_test, :number_of_messages_min)
     {:ok, number_of_messages_max} = Application.fetch_env(:load_test, :number_of_messages_max)
 
+    Logger.warning("SSE BASE URL: #{sse_base_url}")
+    Logger.warning("REST BASE URL: #{rest_base_url}")
     Logger.warning("Starting load test with #{nb_user} users")
 
     Enum.map(1..nb_user, fn _ ->
       Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
         run_virtual_user(
           rest_base_url,
+          rest_timeout,
           sse_base_url,
           sse_timeout,
           number_of_messages_min,
@@ -44,6 +48,7 @@ defmodule Main do
 
   defp run_virtual_user(
          rest_base_url,
+         rest_timeout,
          sse_base_url,
          sse_timeout,
          number_of_messages_min,
@@ -67,6 +72,7 @@ defmodule Main do
           user_name,
           topic,
           rest_base_url,
+          rest_timeout,
           messages,
           delay_between_messages_min,
           delay_between_messages_max
@@ -78,6 +84,7 @@ defmodule Main do
 
     run_virtual_user(
       rest_base_url,
+      rest_timeout,
       sse_base_url,
       sse_timeout,
       number_of_messages_min,
@@ -91,6 +98,7 @@ defmodule Main do
          user_name,
          topic,
          rest_base_url,
+         rest_timeout,
          messages,
          delay_between_messages_min,
          delay_between_messages_max
@@ -99,6 +107,7 @@ defmodule Main do
       InjectorUser.start(
         user_name,
         "#{rest_base_url}/#{topic}",
+        rest_timeout,
         messages,
         delay_between_messages_min,
         delay_between_messages_max

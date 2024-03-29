@@ -2,9 +2,9 @@ defmodule SseUser do
   require Logger
 
   def run(user_name, sse_timeout, url, expected_messages) do
-    Logger.debug(
+    Logger.debug(fn ->
       "#{user_name}: Starting SSE client on url #{url}, expecting #{length(expected_messages)} messages"
-    )
+    end)
 
     headers = []
     http_request_opts = []
@@ -16,11 +16,28 @@ defmodule SseUser do
   end
 
   defp wait_for_messages(user_name, sse_timeout, request_id, [first_message | remaining_messages]) do
+    Logger.debug(fn -> "#{user_name}: Waiting for message: #{first_message}" end)
+
     receive do
-      {:http, {_, :stream, msg}} ->
-        Logger.debug("#{user_name}: Received message: #{extract_message(msg)}")
+      {:http, {request_id, {:error, msg}}} ->
+        Logger.error("#{user_name}: Http error: #{inspect(msg)}")
+        :ok = :httpc.cancel_request(request_id)
+        raise("#{user_name}: Http error")
+
+      {:http, {request_id, :stream, msg}} ->
+        Logger.debug(fn -> "#{user_name}: Received message: #{extract_message(msg)}" end)
         check_message(user_name, extract_message(msg), first_message)
         wait_for_messages(user_name, sse_timeout, request_id, remaining_messages)
+
+      {:http, {request_id, :stream_start, _}} ->
+        Logger.debug(fn -> "#{user_name}: Connected" end)
+
+        wait_for_messages(user_name, sse_timeout, request_id, [first_message | remaining_messages])
+
+      msg ->
+        Logger.error("#{user_name}: Unexpected message #{inspect(msg)}")
+        :ok = :httpc.cancel_request(request_id)
+        raise("#{user_name}: Unexpected message")
     after
       sse_timeout ->
         Logger.error("#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms)")
@@ -44,16 +61,23 @@ defmodule SseUser do
       current_ts = :os.system_time(:millisecond)
       delay = current_ts - String.to_integer(ts)
       LoadTestStats.observe_propagation(delay)
-      Logger.debug("#{user_name}: Propagation delay for message #{message} is #{delay}ms")
+
+      Logger.debug(fn ->
+        "#{user_name}: Propagation delay for message #{message} is #{delay}ms"
+      end)
 
       if message == expected_message do
         LoadTestStats.inc_msg_received_ok()
       else
         LoadTestStats.inc_msg_received_error()
-        Logger.error("#{user_name}: Received unexpected message: #{received_message}")
+
+        Logger.error(
+          "#{user_name}: Received unexpected message: #{received_message} instead of #{expected_message}"
+        )
       end
-    catch
-      e -> Logger.error("#{user_name}: #{e}")
+    rescue
+      e ->
+        Logger.error("#{user_name}: #{inspect(e)}")
     end
   end
 end

@@ -33,8 +33,7 @@ defmodule LoadTest.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:prometheus_ex, "~> 3.1"},
       {:prometheus_plugs, "~> 1.0"},
-      {:uuid, "~> 1.1"},
-      {:req, "~> 0.4.0"}
+      {:uuid, "~> 1.1"}
     ]
   end
 end
