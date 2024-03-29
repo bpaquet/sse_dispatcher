@@ -27,6 +27,8 @@ mix deps.get
 
 MIX_ENV=prod mix release
 
+ulimit -n 1000000
+
 _build/prod/rel/sse_dispatcher/bin/sse_dispatcher daemon
 
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.dd_secret} | jq -r .SecretString > /tmp/secret
