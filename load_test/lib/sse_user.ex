@@ -31,7 +31,9 @@ defmodule SseUser do
         wait_for_messages(user_name, sse_timeout, request_id, remaining_messages)
 
       {:http, {request_id, :stream_start, _}} ->
-        Logger.info(fn -> "#{user_name}: Connected" end)
+        Logger.info(fn ->
+          "#{user_name}: Connected, waiting: #{length(remaining_messages) + 1} messages"
+        end)
 
         wait_for_messages(user_name, sse_timeout, request_id, [first_message | remaining_messages])
 
@@ -41,7 +43,10 @@ defmodule SseUser do
         raise("#{user_name}: Unexpected message")
     after
       sse_timeout ->
-        Logger.error("#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages)} messages")
+        Logger.error(
+          "#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages)} messages"
+        )
+
         :ok = :httpc.cancel_request(request_id)
         raise("#{user_name}: Timeout waiting for message")
     end

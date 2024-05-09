@@ -17,7 +17,10 @@ defmodule SSEDispatcher.Application do
       {Phoenix.PubSub,
        name: SSEDispatcher.PubSub, options: [adapter: Phoenix.PubSub.PG2, pool_size: 10]},
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: rest_port]},
-      {Plug.Cowboy, scheme: :http, plug: Sse, options: [port: sse_port, protocol_options: [idle_timeout: :infinity]]}
+      {Plug.Cowboy,
+       scheme: :http,
+       plug: Sse,
+       options: [port: sse_port, protocol_options: [idle_timeout: :infinity]]}
     ]
 
     MetricsPlugExporter.setup()
