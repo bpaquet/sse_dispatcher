@@ -41,7 +41,7 @@ defmodule SseUser do
         raise("#{user_name}: Unexpected message")
     after
       sse_timeout ->
-        Logger.error("#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms)")
+        Logger.error("#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages)} messages")
         :ok = :httpc.cancel_request(request_id)
         raise("#{user_name}: Timeout waiting for message")
     end
