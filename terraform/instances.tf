@@ -149,7 +149,6 @@ resource "aws_security_group_rule" "sse_dispatcher_outbound" {
   security_group_id = aws_security_group.sse_dispatcher.id
 }
 
-
 resource "aws_security_group_rule" "sse_dispatcher_inbound_3000" {
   type      = "ingress"
   from_port = 3000

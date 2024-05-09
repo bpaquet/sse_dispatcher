@@ -39,10 +39,14 @@ variable "desired_capacity" {
 
 variable "min_size" {
   type    = number
-  default = 1
+  default = 0
 }
 
 variable "max_size" {
   type    = number
   default = 1
+}
+
+variable "acm_certificate_arn" {
+  type = string
 }
