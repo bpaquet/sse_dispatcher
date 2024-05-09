@@ -13,6 +13,9 @@ defmodule InjectorUser do
       "injector_#{user_name}: Starting injector user, #{length(messages)} messages to publish"
     end)
 
+    sleep = :rand.uniform(1000) + 500
+    :timer.sleep(sleep)
+
     run(
       user_name,
       publish_url,
