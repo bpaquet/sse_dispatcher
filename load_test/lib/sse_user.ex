@@ -31,7 +31,7 @@ defmodule SseUser do
         wait_for_messages(user_name, sse_timeout, request_id, remaining_messages)
 
       {:http, {request_id, :stream_start, _}} ->
-        Logger.debug(fn -> "#{user_name}: Connected" end)
+        Logger.info(fn -> "#{user_name}: Connected" end)
 
         wait_for_messages(user_name, sse_timeout, request_id, [first_message | remaining_messages])
 
