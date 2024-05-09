@@ -25,8 +25,9 @@ defmodule SseUser do
         raise("#{user_name}: Http error")
 
       {:http, {request_id, :stream, msg}} ->
-        Logger.debug(fn -> "#{user_name}: Received message: #{extract_message(msg)}" end)
-        check_message(user_name, extract_message(msg), first_message)
+        msg = String.trim(msg)
+        Logger.debug(fn -> "#{user_name}: Received message: #{}" end)
+        check_message(user_name, msg, first_message)
         wait_for_messages(user_name, sse_timeout, request_id, remaining_messages)
 
       {:http, {request_id, :stream_start, _}} ->
@@ -51,13 +52,9 @@ defmodule SseUser do
     Logger.info("#{user_name}: All messages received")
   end
 
-  defp extract_message(message) do
-    String.slice(message, 24..-3//1)
-  end
-
   def check_message(user_name, received_message, expected_message) do
     try do
-      [ts, message] = String.split(received_message, " ", parts: 2)
+      [_, ts, message] = String.split(received_message, " ", parts: 3)
       current_ts = :os.system_time(:millisecond)
       delay = current_ts - String.to_integer(ts)
       LoadTestStats.observe_propagation(delay)
