@@ -15,9 +15,11 @@ defmodule Sse do
   end
 
   get "/sse/:topic" do
-    conn = put_resp_header(conn, "content-type", "text/event-stream")
-    conn = put_resp_header(conn, "Access-Control-Allow-Origin", "*")
-    conn = send_chunked(conn, 200)
+    put_resp_header(conn, "content-type", "text/event-stream")
+    put_resp_header(conn, "cache-Control", "no-cache")
+    put_resp_header(conn, "keep-alive", "text/event-stream")
+    put_resp_header(conn, "Access-Control-Allow-Origin", "*")
+    send_chunked(conn, 200)
 
     Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
     Logger.debug("Client subscribed to #{topic}")
@@ -39,7 +41,7 @@ defmodule Sse do
   end
 
   defp send_message(conn, message) do
-    chunk(conn, "event: \"message\"\n\ndata: #{message}\n\n")
+    chunk(conn, "event: \"message\"\r\ndata: #{message}\r\n")
   end
 
   match _ do
