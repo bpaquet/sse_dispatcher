@@ -18,10 +18,10 @@ defmodule Sse do
     conn = put_resp_header(conn, "content-type", "text/event-stream")
     conn = put_resp_header(conn, "cache-Control", "no-cache")
     conn = put_resp_header(conn, "connection", "keep-alive")
-    conn = put_resp_header(conn, "Access-Control-Allow-Origin", "*")
+    conn = put_resp_header(conn, "access-control-allow-origin", "*")
+    :ok = Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
     conn = send_chunked(conn, 200)
 
-    Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
     Logger.debug("Client subscribed to #{topic}")
 
     loop(conn)
