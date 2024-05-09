@@ -16,6 +16,8 @@ defmodule Sse do
 
   get "/sse/:topic" do
     conn = put_resp_header(conn, "content-type", "text/event-stream")
+    conn = put_resp_header(conn, "cache-Control", "no-cache")
+    conn = put_resp_header(conn, "connection", "keep-alive")
     conn = put_resp_header(conn, "Access-Control-Allow-Origin", "*")
     conn = send_chunked(conn, 200)
 
@@ -39,7 +41,7 @@ defmodule Sse do
   end
 
   defp send_message(conn, message) do
-    chunk(conn, "event: \"message\"\n\ndata: #{message}\n\n")
+    chunk(conn, "data: #{message}\n\n")
   end
 
   match _ do
