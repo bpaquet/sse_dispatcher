@@ -57,7 +57,7 @@ defmodule InjectorUser do
       :httpc.request(
         :post,
         {publish_url, headers, ~c"application/octet-stream",
-         "#{:os.system_time(:millisecond)} #{first_message}"},
+         "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{publish_url}"},
         [{:timeout, rest_timeout}, {:connect_timeout, rest_timeout}],
         []
       )
