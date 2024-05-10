@@ -36,7 +36,7 @@ defmodule Sse do
         SSEStats.inc_msg_published()
         loop(conn)
     after
-      300_000 -> :timeout
+      900_000 -> :timeout
     end
   end
 
