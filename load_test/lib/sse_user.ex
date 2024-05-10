@@ -26,7 +26,7 @@ defmodule SseUser do
 
       {:http, {request_id, :stream, msg}} ->
         msg = String.trim(msg)
-        Logger.debug(fn -> "#{user_name}: Received message: #{}" end)
+        Logger.debug(fn -> "#{user_name}: Received message: #{msg}" end)
         check_message(user_name, msg, first_message)
         wait_for_messages(user_name, sse_timeout, url, request_id, remaining_messages)
 
@@ -44,7 +44,7 @@ defmodule SseUser do
     after
       sse_timeout ->
         Logger.error(
-          "#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages)} messages, url #{url}"
+          "#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages) + 1} messages, url #{url}"
         )
 
         :ok = :httpc.cancel_request(request_id)
