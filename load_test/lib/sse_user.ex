@@ -15,7 +15,9 @@ defmodule SseUser do
     wait_for_messages(user_name, sse_timeout, url, request_id, expected_messages)
   end
 
-  defp wait_for_messages(user_name, sse_timeout, url, request_id, [first_message | remaining_messages]) do
+  defp wait_for_messages(user_name, sse_timeout, url, request_id, [
+         first_message | remaining_messages
+       ]) do
     Logger.debug(fn -> "#{user_name}: Waiting for message: #{first_message}" end)
 
     receive do
@@ -35,7 +37,9 @@ defmodule SseUser do
           "#{user_name}: Connected, waiting: #{length(remaining_messages) + 1} messages, url #{url}"
         end)
 
-        wait_for_messages(user_name, sse_timeout, url, request_id, [first_message | remaining_messages])
+        wait_for_messages(user_name, sse_timeout, url, request_id, [
+          first_message | remaining_messages
+        ])
 
       msg ->
         Logger.error("#{user_name}: Unexpected message #{inspect(msg)}")
