@@ -12,10 +12,10 @@ defmodule SseUser do
     {:ok, request_id} =
       :httpc.request(:get, {url, headers}, http_request_opts, [{:sync, false}, {:stream, :self}])
 
-    wait_for_messages(user_name, sse_timeout, request_id, expected_messages)
+    wait_for_messages(user_name, sse_timeout, url, request_id, expected_messages)
   end
 
-  defp wait_for_messages(user_name, sse_timeout, request_id, [first_message | remaining_messages]) do
+  defp wait_for_messages(user_name, sse_timeout, url, request_id, [first_message | remaining_messages]) do
     Logger.debug(fn -> "#{user_name}: Waiting for message: #{first_message}" end)
 
     receive do
@@ -28,14 +28,14 @@ defmodule SseUser do
         msg = String.trim(msg)
         Logger.debug(fn -> "#{user_name}: Received message: #{}" end)
         check_message(user_name, msg, first_message)
-        wait_for_messages(user_name, sse_timeout, request_id, remaining_messages)
+        wait_for_messages(user_name, sse_timeout, url, request_id, remaining_messages)
 
       {:http, {request_id, :stream_start, _}} ->
         Logger.info(fn ->
-          "#{user_name}: Connected, waiting: #{length(remaining_messages) + 1} messages"
+          "#{user_name}: Connected, waiting: #{length(remaining_messages) + 1} messages, url #{url}"
         end)
 
-        wait_for_messages(user_name, sse_timeout, request_id, [first_message | remaining_messages])
+        wait_for_messages(user_name, sse_timeout, url, request_id, [first_message | remaining_messages])
 
       msg ->
         Logger.error("#{user_name}: Unexpected message #{inspect(msg)}")
@@ -44,7 +44,7 @@ defmodule SseUser do
     after
       sse_timeout ->
         Logger.error(
-          "#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages)} messages"
+          "#{user_name}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages)} messages, url #{url}"
         )
 
         :ok = :httpc.cancel_request(request_id)
@@ -52,9 +52,9 @@ defmodule SseUser do
     end
   end
 
-  defp wait_for_messages(user_name, _, request_id, []) do
+  defp wait_for_messages(user_name, _, url, request_id, []) do
     :ok = :httpc.cancel_request(request_id)
-    Logger.info("#{user_name}: All messages received")
+    Logger.info("#{user_name}: All messages received, url #{url}")
   end
 
   def check_message(user_name, received_message, expected_message) do
