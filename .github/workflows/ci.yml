@@ -1,0 +1,12 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubunut-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+      - run: mix format --check-formatted
