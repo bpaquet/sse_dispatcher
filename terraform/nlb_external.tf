@@ -22,7 +22,7 @@ resource "aws_security_group_rule" "external_lb_inbound_https" {
   security_group_id = aws_security_group.external_lb.id
 }
 
-resource "aws_security_group_rule" "external_lb_outbound" {
+resource "aws_security_group_rule" "external_lb_outbound_4000" {
   type              = "egress"
   from_port         = 4000
   to_port           = 4000
@@ -30,6 +30,16 @@ resource "aws_security_group_rule" "external_lb_outbound" {
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.external_lb.id
 }
+
+resource "aws_security_group_rule" "external_lb_outbound_3000" {
+  type              = "egress"
+  from_port         = 3000
+  to_port           = 3000
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.external_lb.id
+}
+
 
 resource "aws_lb" "external" {
   name               = "${var.prefix}-sse-dispatcher-external-lb"
@@ -77,7 +87,7 @@ resource "aws_lb_target_group" "external" {
 
   health_check {
     path     = "/ping"
-    port     = 4000
+    port     = 3000
     protocol = "HTTP"
     interval = 10
   }

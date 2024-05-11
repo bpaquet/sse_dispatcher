@@ -149,7 +149,7 @@ resource "aws_security_group_rule" "sse_dispatcher_outbound" {
   security_group_id = aws_security_group.sse_dispatcher.id
 }
 
-resource "aws_security_group_rule" "sse_dispatcher_inbound_3000" {
+resource "aws_security_group_rule" "sse_dispatcher_inbound_internal_3000" {
   type      = "ingress"
   from_port = 3000
   to_port   = 3000
@@ -158,6 +158,17 @@ resource "aws_security_group_rule" "sse_dispatcher_inbound_3000" {
   source_security_group_id = aws_security_group.internal_lb.id
   security_group_id        = aws_security_group.sse_dispatcher.id
 }
+
+resource "aws_security_group_rule" "sse_dispatcher_inbound_external_3000" {
+  type      = "ingress"
+  from_port = 3000
+  to_port   = 3000
+  protocol  = "tcp"
+  # cidr_blocks       = ["0.0.0.0/0"]
+  source_security_group_id = aws_security_group.external_lb.id
+  security_group_id        = aws_security_group.sse_dispatcher.id
+}
+
 
 resource "aws_security_group_rule" "sse_dispatcher_inbound_4000" {
   type      = "ingress"
