@@ -13,18 +13,31 @@ defmodule InjectorUser do
       "injector_#{user_name}: Starting injector user, #{length(messages)} messages to publish"
     end)
 
+    start_time = :os.system_time(:millisecond)
+    sleep = :rand.uniform(1000) + 500
+    :timer.sleep(sleep)
+
+    Logger.info(fn ->
+      "injector_#{user_name}: Start publishing #{length(messages)} messages to #{publish_url}"
+    end)
+
     run(
       user_name,
       publish_url,
       rest_timeout,
       messages,
       delay_between_messages_min,
-      delay_between_messages_max
+      delay_between_messages_max,
+      start_time
     )
   end
 
-  defp run(user_name, _, _, [], _, _) do
-    Logger.info(fn -> "injector_#{user_name}: All messages published" end)
+  defp run(user_name, publish_url, _, [], _, _, start_time) do
+    duration = :os.system_time(:millisecond) - start_time
+
+    Logger.info(fn ->
+      "injector_#{user_name}: All messages published to #{publish_url}, duration: #{duration / 1000}"
+    end)
   end
 
   defp run(
@@ -33,7 +46,8 @@ defmodule InjectorUser do
          rest_timeout,
          [first_message | messages],
          delay_between_messages_min,
-         delay_between_messages_max
+         delay_between_messages_max,
+         start_time
        ) do
     sleep =
       :rand.uniform(delay_between_messages_max - delay_between_messages_min) +
@@ -52,7 +66,7 @@ defmodule InjectorUser do
       :httpc.request(
         :post,
         {publish_url, headers, ~c"application/octet-stream",
-         "#{:os.system_time(:millisecond)} #{first_message}"},
+         "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{publish_url}"},
         [{:timeout, rest_timeout}, {:connect_timeout, rest_timeout}],
         []
       )
@@ -77,7 +91,8 @@ defmodule InjectorUser do
       rest_timeout,
       messages,
       delay_between_messages_min,
-      delay_between_messages_max
+      delay_between_messages_max,
+      start_time
     )
   end
 end

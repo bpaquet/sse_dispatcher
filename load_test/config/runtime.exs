@@ -23,7 +23,7 @@ config :load_test,
     String.to_integer(System.get_env("DELAY_BETWEEN_MESSAGES_MAX") || "5000")
 
 config :load_test,
-  number_of_messages_min: String.to_integer(System.get_env("NUMBER_OF_MESSAGES_MIN") || "1")
+  number_of_messages_min: String.to_integer(System.get_env("NUMBER_OF_MESSAGES_MIN") || "10")
 
 config :load_test,
-  number_of_messages_max: String.to_integer(System.get_env("NUMBER_OF_MESSAGES_MAX") || "20")
+  number_of_messages_max: String.to_integer(System.get_env("NUMBER_OF_MESSAGES_MAX") || "50")

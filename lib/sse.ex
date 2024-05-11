@@ -18,30 +18,26 @@ defmodule Sse do
     conn = put_resp_header(conn, "content-type", "text/event-stream")
     conn = put_resp_header(conn, "cache-Control", "no-cache")
     conn = put_resp_header(conn, "connection", "keep-alive")
-    conn = put_resp_header(conn, "Access-Control-Allow-Origin", "*")
+    conn = put_resp_header(conn, "access-control-allow-origin", "*")
+    :ok = Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
     conn = send_chunked(conn, 200)
 
-    Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
     Logger.debug("Client subscribed to #{topic}")
 
-    loop(conn)
+    loop(conn, Application.fetch_env!(:sse_dispatcher, :sse_timeout))
     Logger.debug("Client disconnected from #{topic}")
     conn
   end
 
-  defp loop(conn) do
+  defp loop(conn, sse_timeout) do
     receive do
       {:pubsub_message, msg} ->
-        send_message(conn, msg)
+        {:ok, conn} = chunk(conn, "data: #{msg}\n\n")
         SSEStats.inc_msg_published()
-        loop(conn)
+        loop(conn, sse_timeout)
     after
-      300_000 -> :timeout
+      sse_timeout -> :timeout
     end
-  end
-
-  defp send_message(conn, message) do
-    chunk(conn, "data: #{message}\n\n")
   end
 
   match _ do

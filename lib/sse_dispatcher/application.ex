@@ -10,14 +10,23 @@ defmodule SSEDispatcher.Application do
   def start(_type, _args) do
     {:ok, sse_port} = Application.fetch_env(:sse_dispatcher, :sse_port)
     {:ok, rest_port} = Application.fetch_env(:sse_dispatcher, :rest_port)
+    {:ok, max_connections} = Application.fetch_env(:sse_dispatcher, :max_connections)
     Logger.warning("Current host #{node()}")
     Logger.warning("Starting SSEDispatcher on port #{sse_port} for SSE and #{rest_port} for REST")
+    Logger.warning("Max connections: #{max_connections}")
 
     children = [
       {Phoenix.PubSub,
        name: SSEDispatcher.PubSub, options: [adapter: Phoenix.PubSub.PG2, pool_size: 10]},
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: rest_port]},
-      {Plug.Cowboy, scheme: :http, plug: Sse, options: [port: sse_port, protocol_options: [idle_timeout: :infinity]]}
+      {Plug.Cowboy,
+       scheme: :http,
+       plug: Sse,
+       options: [
+         port: sse_port,
+         protocol_options: [idle_timeout: :infinity],
+         transport_options: [max_connections: max_connections]
+       ]}
     ]
 
     MetricsPlugExporter.setup()

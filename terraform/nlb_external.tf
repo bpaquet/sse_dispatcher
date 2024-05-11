@@ -13,7 +13,7 @@ resource "aws_security_group_rule" "external_lb_inbound_http" {
 }
 
 resource "aws_security_group_rule" "external_lb_inbound_https" {
-  count = var.acm_certificate_arn != "" ? 1 : 0
+  count             = var.acm_domain != "" ? 1 : 0
   type              = "ingress"
   from_port         = 443
   to_port           = 443
@@ -22,7 +22,7 @@ resource "aws_security_group_rule" "external_lb_inbound_https" {
   security_group_id = aws_security_group.external_lb.id
 }
 
-resource "aws_security_group_rule" "external_lb_outbound" {
+resource "aws_security_group_rule" "external_lb_outbound_4000" {
   type              = "egress"
   from_port         = 4000
   to_port           = 4000
@@ -30,6 +30,16 @@ resource "aws_security_group_rule" "external_lb_outbound" {
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.external_lb.id
 }
+
+resource "aws_security_group_rule" "external_lb_outbound_3000" {
+  type              = "egress"
+  from_port         = 3000
+  to_port           = 3000
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.external_lb.id
+}
+
 
 resource "aws_lb" "external" {
   name               = "${var.prefix}-sse-dispatcher-external-lb"
@@ -58,11 +68,11 @@ resource "aws_lb_listener" "external" {
 }
 
 resource "aws_lb_listener" "external-tls" {
-  count = var.acm_certificate_arn != "" ? 1 : 0
+  count             = var.acm_domain != "" ? 1 : 0
   load_balancer_arn = aws_lb.external.arn
   port              = "443"
   protocol          = "TLS"
-  certificate_arn   = var.acm_certificate_arn
+  certificate_arn   = data.aws_acm_certificate.certificate[0].arn
 
   default_action {
     type             = "forward"
@@ -77,7 +87,7 @@ resource "aws_lb_target_group" "external" {
 
   health_check {
     path     = "/ping"
-    port     = 4000
+    port     = 3000
     protocol = "HTTP"
     interval = 10
   }

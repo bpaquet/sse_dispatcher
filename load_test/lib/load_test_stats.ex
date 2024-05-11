@@ -23,6 +23,14 @@ defmodule LoadTestStats do
       name: :propagation_delay,
       help: "Propagation delay"
     )
+
+    Gauge.set([name: :user_running], 0)
+    Gauge.set([name: :users, labels: [:ok]], 0)
+    Gauge.set([name: :users, labels: [:error]], 0)
+    Gauge.set([name: :messages, labels: [:received, :ok]], 0)
+    Gauge.set([name: :messages, labels: [:received, :error]], 0)
+    Gauge.set([name: :messages, labels: [:published, :ok]], 0)
+    Gauge.set([name: :messages, labels: [:published, :error]], 0)
   end
 
   def inc_user_running() do
