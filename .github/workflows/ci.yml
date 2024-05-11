@@ -10,5 +10,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
-          otp-version: OTP-26
+          otp-version: 26
+          elixir-version: 1.16
       - run: mix format --check-formatted
