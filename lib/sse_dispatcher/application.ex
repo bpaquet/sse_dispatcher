@@ -22,7 +22,11 @@ defmodule SSEDispatcher.Application do
       {Plug.Cowboy,
        scheme: :http,
        plug: Sse,
-       options: [port: sse_port, protocol_options: [idle_timeout: :infinity], transport_options: [max_connections: max_connections]]}
+       options: [
+         port: sse_port,
+         protocol_options: [idle_timeout: :infinity],
+         transport_options: [max_connections: max_connections]
+       ]}
     ]
 
     MetricsPlugExporter.setup()
