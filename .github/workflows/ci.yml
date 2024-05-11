@@ -13,4 +13,5 @@ jobs:
           otp-version: 26
           elixir-version: 1.16
       - run: mix format --check-formatted
+      - run: mix deps.get
       - run: mix compile --warnings-as-errors
