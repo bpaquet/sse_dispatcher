@@ -20,7 +20,7 @@ mkdir $HOME
 cd /opt
 git clone https://github.com/bpaquet/sse_dispatcher
 cd sse_dispatcher/load_test
-git checkout 24d5f3e27110f4351889410a2ae2ea97697f08a1
+git checkout ${var.version_override != "" ? var.version_override : data.terraform_remote_state.local.outputs.configsse_dispatcher_revision}
 
 mix local.hex --force
 mix deps.get

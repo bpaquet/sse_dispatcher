@@ -26,3 +26,7 @@ variable "nb_users" {
   type    = number
   default = 5000
 }
+
+variable "version_override" {
+  type = string
+}
