@@ -28,3 +28,12 @@ jobs:
       - run: cd load_test && mix format --check-formatted
       - run: cd load_test && mix deps.get
       - run: cd load_test && mix compile --warnings-as-errors
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.6
+      - run: terraform fmt --check --recursive
