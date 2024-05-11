@@ -28,7 +28,7 @@ data "aws_subnet" "first_public" {
 }
 
 data "aws_acm_certificate" "certificate" {
-  count = var.acm_domain != "" ? 1 : 0
+  count    = var.acm_domain != "" ? 1 : 0
   domain   = var.acm_domain
   statuses = ["ISSUED"]
 }

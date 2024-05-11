@@ -13,7 +13,7 @@ resource "aws_security_group_rule" "external_lb_inbound_http" {
 }
 
 resource "aws_security_group_rule" "external_lb_inbound_https" {
-  count = var.acm_domain != "" ? 1 : 0
+  count             = var.acm_domain != "" ? 1 : 0
   type              = "ingress"
   from_port         = 443
   to_port           = 443
@@ -58,7 +58,7 @@ resource "aws_lb_listener" "external" {
 }
 
 resource "aws_lb_listener" "external-tls" {
-  count = var.acm_domain != "" ? 1 : 0
+  count             = var.acm_domain != "" ? 1 : 0
   load_balancer_arn = aws_lb.external.arn
   port              = "443"
   protocol          = "TLS"

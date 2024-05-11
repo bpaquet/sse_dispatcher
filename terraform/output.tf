@@ -14,7 +14,7 @@ output "dd_tags" {
 }
 
 output "dd_secret" {
-  value = var.dd_secret
+  value     = var.dd_secret
   sensitive = true
 }
 
