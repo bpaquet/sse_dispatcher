@@ -47,6 +47,6 @@ variable "max_size" {
   default = 1
 }
 
-variable "acm_certificate_arn" {
+variable "acm_domain" {
   type = string
 }

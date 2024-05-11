@@ -26,3 +26,10 @@ data "aws_subnet" "first_private" {
 data "aws_subnet" "first_public" {
   id = var.public_subnets[0]
 }
+
+data "aws_acm_certificate" "certificate" {
+  count = var.acm_domain != "" ? 1 : 0
+  domain   = var.acm_domain
+  statuses = ["ISSUED"]
+}
+
