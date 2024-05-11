@@ -24,19 +24,19 @@ defmodule Sse do
 
     Logger.debug("Client subscribed to #{topic}")
 
-    loop(conn)
+    loop(conn, Application.fetch_env!(:sse_dispatcher, :sse_timeout))
     Logger.debug("Client disconnected from #{topic}")
     conn
   end
 
-  defp loop(conn) do
+  defp loop(conn, sse_timeout) do
     receive do
       {:pubsub_message, msg} ->
         {:ok, conn} = chunk(conn, "data: #{msg}\n\n")
         SSEStats.inc_msg_published()
-        loop(conn)
+        loop(conn, sse_timeout)
     after
-      900_000 -> :timeout
+      sse_timeout -> :timeout
     end
   end
 
