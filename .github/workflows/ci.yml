@@ -9,4 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
+        with:
+          otp-version: OTP-26
       - run: mix format --check-formatted
