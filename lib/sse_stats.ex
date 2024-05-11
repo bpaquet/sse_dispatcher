@@ -17,6 +17,11 @@ defmodule SSEStats do
       labels: [:kind],
       help: "SSE Messages"
     )
+
+    Gauge.set([name: :current_connections], 0)
+    Gauge.set([name: :connections], 0)
+    Gauge.set([name: :messages, labels: [:received]], 0)
+    Gauge.set([name: :messages, labels: [:published]], 0)
   end
 
   def inc_connections() do
