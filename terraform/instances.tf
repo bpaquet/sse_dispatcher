@@ -1,6 +1,6 @@
 locals {
   asg_group_name = "${var.prefix}-sse-dispatcher"
-  user_data = <<-EOF
+  user_data      = <<-EOF
 #!/bin/bash -e
 
 yum install -y ncurses-compat-libs git jq htop

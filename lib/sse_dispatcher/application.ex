@@ -36,6 +36,7 @@ defmodule SSEDispatcher.Application do
 
   defp ec2_ip_to_nodename(list, _) when is_list(list) do
     [sname, _] = String.split(to_string(node()), "@")
+
     list
     |> Enum.map(fn ip ->
       :"#{sname}@ip-#{String.replace(ip, ".", "-")}"
@@ -45,7 +46,9 @@ defmodule SSEDispatcher.Application do
   defp add_cluster_supervisor(children) do
     cond do
       System.get_env("EPMD_CLUSTER_MEMBERS") ->
-        Logger.info("Starting libcluster with EMPD_CLUSTER_MEMBERS: #{System.get_env("EPMD_CLUSTER_MEMBERS")}")
+        Logger.info(
+          "Starting libcluster with EMPD_CLUSTER_MEMBERS: #{System.get_env("EPMD_CLUSTER_MEMBERS")}"
+        )
 
         topologies = [
           epmd: [
@@ -61,8 +64,11 @@ defmodule SSEDispatcher.Application do
         ]
 
         children ++ [{Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}]
+
       System.get_env("EC2_CLUSTER_TAG") && System.get_env("EC2_CLUSTER_VALUE") ->
-        Logger.info("Starting libcluster with EC2_CLUSTER_TAG: #{System.get_env("EC2_CLUSTER_TAG")}")
+        Logger.info(
+          "Starting libcluster with EC2_CLUSTER_TAG: #{System.get_env("EC2_CLUSTER_TAG")}"
+        )
 
         topologies = [
           ec2: [
@@ -71,12 +77,15 @@ defmodule SSEDispatcher.Application do
               ec2_tagname: System.get_env("EC2_CLUSTER_TAG"),
               ec2_tagvalue: System.get_env("EC2_CLUSTER_VALUE"),
               ip_to_nodename: &ec2_ip_to_nodename/2,
-              show_debug: true,
-            ],
+              show_debug: true
+            ]
           ]
         ]
+
         children ++ [{Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}]
-      true -> children
+
+      true ->
+        children
     end
   end
 end
