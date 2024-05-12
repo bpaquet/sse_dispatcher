@@ -35,25 +35,39 @@ defmodule SSEDispatcher.Application do
   end
 
   defp add_cluster_supervisor(children) do
-    if System.get_env("EPMD_CLUSTER_MEMBERS") do
-      Logger.info("Starting libcluster")
+    cond do
+      System.get_env("EPMD_CLUSTER_MEMBERS") ->
+        Logger.info("Starting libcluster with EMPD_CLUSTER_MEMBERS: #{System.get_env("EPMD_CLUSTER_MEMBERS")}")
 
-      topologies = [
-        example: [
-          strategy: Cluster.Strategy.Epmd,
-          config: [
-            hosts:
-              Enum.map(
-                String.split(System.get_env("EPMD_CLUSTER_MEMBERS"), ","),
-                &String.to_atom/1
-              )
+        topologies = [
+          epmd: [
+            strategy: Cluster.Strategy.Epmd,
+            config: [
+              hosts:
+                Enum.map(
+                  String.split(System.get_env("EPMD_CLUSTER_MEMBERS"), ","),
+                  &String.to_atom/1
+                )
+            ]
           ]
         ]
-      ]
 
-      children ++ [{Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}]
-    else
-      children
+        children ++ [{Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}]
+      System.get_env("EC2_CLUSTER_TAG") && System.get_env("EC2_CLUSTER_VALUE") ->
+        Logger.info("Starting libcluster with EC2_CLUSTER_TAG: #{System.get_env("EC2_CLUSTER_TAG")}")
+
+        topologies = [
+          example: [
+            strategy: ClusterEC2.Strategy.Tags,
+            config: [
+              ec2_tagname: System.get_env("EC2_CLUSTER_TAG"),
+              ec2_tagvalue: System.get_env("EC2_CLUSTER_VALUE"),
+              show_debug: true,
+            ],
+          ]
+        ]
+        children ++ [{Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}]
+      true -> children
     end
   end
 end
