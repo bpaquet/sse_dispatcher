@@ -31,6 +31,11 @@ defmodule LoadTestStats do
     Gauge.set([name: :messages, labels: [:received, :error]], 0)
     Gauge.set([name: :messages, labels: [:published, :ok]], 0)
     Gauge.set([name: :messages, labels: [:published, :error]], 0)
+
+    Periodic.start_link(
+      run: fn -> Summary.reset([name: :propagation_delay]) end,
+      every: :timer.seconds(10)
+    )
   end
 
   def inc_user_running() do
