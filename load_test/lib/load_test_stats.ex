@@ -33,7 +33,7 @@ defmodule LoadTestStats do
     Gauge.set([name: :messages, labels: [:published, :error]], 0)
 
     Periodic.start_link(
-      run: fn -> Summary.reset([name: :propagation_delay]) end,
+      run: fn -> Summary.reset(name: :propagation_delay) end,
       every: :timer.seconds(10)
     )
   end
