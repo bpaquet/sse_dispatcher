@@ -44,7 +44,7 @@ variable "min_size" {
 
 variable "max_size" {
   type    = number
-  default = 1
+  default = 10
 }
 
 variable "acm_domain" {
