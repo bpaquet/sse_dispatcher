@@ -29,4 +29,5 @@ variable "nb_users" {
 
 variable "version_override" {
   type = string
+  default = ""
 }
