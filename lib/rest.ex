@@ -17,7 +17,16 @@ defmodule Rest do
   get "/ping" do
     conn
     |> put_resp_header("content-type", "text/html")
-    |> send_resp(200, "ok")
+    |> send_resp(200, "ok\n")
+  end
+
+  get "/cluster_size_above/:size" do
+    size = String.to_integer(size)
+    cluster_size = length(Node.list()) + 1
+
+    conn
+    |> put_resp_header("content-type", "text/html")
+    |> send_resp(cluster_size >= size && 200 || 404, "Cluster size: #{cluster_size}\n")
   end
 
   get "/nodes" do
