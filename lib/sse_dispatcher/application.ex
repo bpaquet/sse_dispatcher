@@ -34,6 +34,13 @@ defmodule SSEDispatcher.Application do
     Supervisor.start_link(add_cluster_supervisor(children), opts)
   end
 
+  defp ec2_ip_to_nodename(list, _) when is_list(list) do
+    list
+    |> Enum.map(fn ip ->
+      :"sse_dispatcher@ip-#{String.replace(ip, ".", "-")}"
+    end)
+  end
+
   defp add_cluster_supervisor(children) do
     cond do
       System.get_env("EPMD_CLUSTER_MEMBERS") ->
@@ -62,6 +69,7 @@ defmodule SSEDispatcher.Application do
             config: [
               ec2_tagname: System.get_env("EC2_CLUSTER_TAG"),
               ec2_tagvalue: System.get_env("EC2_CLUSTER_VALUE"),
+              ip_to_nodename: &ec2_ip_to_nodename/2,
               show_debug: true,
             ],
           ]
