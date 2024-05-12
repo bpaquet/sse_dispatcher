@@ -1,8 +1,9 @@
 locals {
+  asg_group_name = "${var.prefix}-sse-dispatcher"
   user_data = <<-EOF
 #!/bin/bash -e
 
-yum install -y ncurses-compat-libs git jq
+yum install -y ncurses-compat-libs git jq htop
 wget https://binaries2.erlang-solutions.com/centos/7/esl-erlang_26.2.1_1~centos~7_x86_64.rpm -O /tmp/esl-erlang_26.2.1_1~centos~7_x86_64.rpm
 rpm -ivh /tmp/esl-erlang_26.2.1_1~centos~7_x86_64.rpm
 
@@ -28,6 +29,11 @@ mix deps.get
 MIX_ENV=prod mix release
 
 ulimit -n 1000000
+
+export RELEASE_TMP=/tmp/
+export RELEASE_COOKIE=changme
+export EC2_CLUSTER_TAG=aws:autoscaling:groupName
+export EC2_CLUSTER_VALUE=${local.asg_group_name}
 
 _build/prod/rel/sse_dispatcher/bin/sse_dispatcher daemon
 
@@ -95,6 +101,14 @@ resource "aws_iam_policy" "sse_dispatcher_policy" {
         "secretsmanager:GetSecretValue"
       ],
       "Resource": "${var.dd_secret}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+          "ec2:DescribeInstances",
+          "ec2:DescribeTags"
+      ],
+      "Resource": "*"
     }
   ]
 }
@@ -180,8 +194,28 @@ resource "aws_security_group_rule" "sse_dispatcher_inbound_4000" {
   security_group_id        = aws_security_group.sse_dispatcher.id
 }
 
+resource "aws_security_group_rule" "sse_dispatcher_inbound_internode" {
+  type      = "ingress"
+  from_port = 0
+  to_port   = 65535
+  protocol  = "tcp"
+  # cidr_blocks       = ["0.0.0.0/0"]
+  source_security_group_id = aws_security_group.sse_dispatcher.id
+  security_group_id        = aws_security_group.sse_dispatcher.id
+}
+
+resource "aws_security_group_rule" "sse_dispatcher_outbound_internode" {
+  type      = "egress"
+  from_port = 0
+  to_port   = 65535
+  protocol  = "tcp"
+  # cidr_blocks       = ["0.0.0.0/0"]
+  source_security_group_id = aws_security_group.sse_dispatcher.id
+  security_group_id        = aws_security_group.sse_dispatcher.id
+}
+
 resource "aws_autoscaling_group" "sse_dispatcher" {
-  name             = "${var.prefix}-sse-dispatcher"
+  name             = local.asg_group_name
   desired_capacity = var.desired_capacity
   max_size         = var.max_size
   min_size         = var.min_size

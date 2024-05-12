@@ -35,9 +35,10 @@ defmodule SSEDispatcher.Application do
   end
 
   defp ec2_ip_to_nodename(list, _) when is_list(list) do
+    [sname, _] = String.split(to_string(node()), "@")
     list
     |> Enum.map(fn ip ->
-      :"sse_dispatcher@ip-#{String.replace(ip, ".", "-")}"
+      :"#{sname}@ip-#{String.replace(ip, ".", "-")}"
     end)
   end
 
@@ -64,7 +65,7 @@ defmodule SSEDispatcher.Application do
         Logger.info("Starting libcluster with EC2_CLUSTER_TAG: #{System.get_env("EC2_CLUSTER_TAG")}")
 
         topologies = [
-          example: [
+          ec2: [
             strategy: ClusterEC2.Strategy.Tags,
             config: [
               ec2_tagname: System.get_env("EC2_CLUSTER_TAG"),
