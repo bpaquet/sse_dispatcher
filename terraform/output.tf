@@ -5,10 +5,6 @@ export SSE_BASE_URL="${var.acm_domain != "" ? "https" : "http"}://${var.acm_doma
 EOF
 }
 
-output "sse_dispatcher_revision" {
-  value = var.sse_dispatcher_revision
-}
-
 output "dd_tags" {
   value = var.dd_tags
 }

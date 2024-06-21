@@ -3,46 +3,22 @@ locals {
   user_data      = <<-EOF
 #!/bin/bash -e
 
-yum install -y ncurses-compat-libs git jq htop
-wget https://binaries2.erlang-solutions.com/centos/7/esl-erlang_26.2.1_1~centos~7_x86_64.rpm -O /tmp/esl-erlang_26.2.1_1~centos~7_x86_64.rpm
-rpm -ivh /tmp/esl-erlang_26.2.1_1~centos~7_x86_64.rpm
-
-wget https://github.com/elixir-lang/elixir/releases/download/v1.16.2/elixir-otp-26.zip -O /tmp/elixir-otp-26.zip
-mkdir /opt/elixir
-cd /opt/elixir
-unzip /tmp/elixir-otp-26.zip
-
-export PATH=/opt/elixir/bin:$PATH
-export ELIXIR_ERL_OPTIONS="+fnu"
-export HOME=/opt/home
-
-mkdir $HOME
-
-cd /opt
-git clone https://github.com/bpaquet/sse_dispatcher
-cd sse_dispatcher
-git checkout ${var.sse_dispatcher_revision}
-
-mix local.hex --force
-mix deps.get
-
-MIX_ENV=prod mix release
 
 ulimit -n 1000000
 
-export RELEASE_TMP=/tmp/
-export RELEASE_COOKIE=changme
+yum install -y docker jq
+service docker restart
+docker run -d --rm -ti --network=host ${var.docker_image}
+
 export EC2_CLUSTER_TAG=aws:autoscaling:groupName
 export EC2_CLUSTER_VALUE=${local.asg_group_name}
-
-_build/prod/rel/sse_dispatcher/bin/sse_dispatcher daemon
 
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.dd_secret} | jq -r .SecretString > /tmp/secret
 
 DD_API_KEY="$(cat /tmp/secret)" DD_HOST_TAGS="${var.dd_tags}" bash -c "$(curl -L https://s3.amazonaws.com/dd-agent/scripts/install_script_agent7.sh)"
 
 echo "instances:
-  - prometheus_url: http://localhost:3000/metrics
+  - prometheus_url: http://localhost:9000/metrics
     namespace: sse_dispatcher
     metrics:
     - '*'

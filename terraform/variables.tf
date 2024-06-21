@@ -19,7 +19,7 @@ variable "private_subnets" {
   type = list(string)
 }
 
-variable "sse_dispatcher_revision" {
+variable "docker_image" {
   type = string
 }
 
