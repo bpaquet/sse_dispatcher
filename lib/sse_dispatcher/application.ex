@@ -10,13 +10,18 @@ defmodule SSEDispatcher.Application do
   def start(_type, _args) do
     {:ok, sse_port} = Application.fetch_env(:sse_dispatcher, :sse_port)
     {:ok, rest_port} = Application.fetch_env(:sse_dispatcher, :rest_port)
+    {:ok, prometheus_port} = Application.fetch_env(:sse_dispatcher, :prometheus_port)
     Logger.warning("Current host #{node()}")
-    Logger.warning("Starting SSEDispatcher on port #{sse_port} for SSE and #{rest_port} for REST")
+
+    Logger.warning(
+      "Starting SSEDispatcher on port #{sse_port} for SSE, #{rest_port} for REST, #{prometheus_port} for Prometheus"
+    )
 
     children = [
       {Phoenix.PubSub,
        name: SSEDispatcher.PubSub, options: [adapter: Phoenix.PubSub.PG2, pool_size: 10]},
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: rest_port]},
+      {Plug.Cowboy, scheme: :http, plug: Prom, options: [port: prometheus_port]},
       {Plug.Cowboy,
        scheme: :http,
        plug: Sse,
