@@ -85,8 +85,10 @@ resource "aws_lb_target_group" "external" {
   protocol = "TCP"
   vpc_id   = data.aws_subnet.first_public.vpc_id
 
+  deregistration_delay = 900 # Wait 15 minutes before killing connections
+
   health_check {
-    path     = "/ping"
+    path     = "/cluster_size_above/${var.healtcheck_min_cluster_size}"
     port     = 3000
     protocol = "HTTP"
     interval = 10
