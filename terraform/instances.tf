@@ -3,12 +3,9 @@ locals {
   user_data      = <<-EOF
 #!/bin/bash -e
 
-
-ulimit -n 1000000
-
-yum install -y docker jq
+yum install -y docker jq htop
 service docker restart
-docker run -d --rm -ti --network=host ${var.docker_image}
+docker run -d --network=host --ulimit nofile=1000000:1000000 ${var.docker_image}
 
 export EC2_CLUSTER_TAG=aws:autoscaling:groupName
 export EC2_CLUSTER_VALUE=${local.asg_group_name}
