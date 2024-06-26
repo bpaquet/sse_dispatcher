@@ -5,10 +5,10 @@ locals {
 
 yum install -y docker jq htop
 service docker restart
-docker run -d --network=host --ulimit nofile=1000000:1000000 ${var.docker_image}
-
 export EC2_CLUSTER_TAG=aws:autoscaling:groupName
 export EC2_CLUSTER_VALUE=${local.asg_group_name}
+
+docker run -d --network=host -e EC2_CLUSTER_TAG -e EC2_CLUSTER_VALUE --ulimit nofile=1000000:1000000 ${var.docker_image}
 
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.dd_secret} | jq -r .SecretString > /tmp/secret
 
