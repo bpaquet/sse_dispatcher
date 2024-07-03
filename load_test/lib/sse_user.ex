@@ -45,24 +45,29 @@ defmodule SseUser do
       msg ->
         Logger.error("#{user_name}: Unexpected message #{inspect(msg)}")
         :ok = :httpc.cancel_request(request_id)
-        raise("#{user_name}: Started at: #{started_at}: Unexpected message")
+        raise("#{header(user_name, started_at)} Unexpected message")
     after
       sse_timeout ->
         Logger.error(
-          "#{user_name}: Started at: #{started_at}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages) + 1} messages, url #{url}"
+          "#{header(user_name, started_at)} Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages) + 1} messages, url #{url}"
         )
 
         :ok = :httpc.cancel_request(request_id)
-        raise("#{user_name}: Started at: #{started_at}: Timeout waiting for message")
+        raise("#{header(user_name, started_at)} Timeout waiting for message")
     end
   end
 
-  defp wait_for_messages(user_name, _, _, url, request_id, []) do
+  defp wait_for_messages(user_name, started_at, _, url, request_id, []) do
     :ok = :httpc.cancel_request(request_id)
-    Logger.info("#{user_name}: All messages received, url #{url}")
+    Logger.info("#{header(user_name, started_at)} All messages received, url #{url}")
   end
 
-  def check_message(user_name, started_at, url, received_message, expected_message) do
+  defp header(user_name, started_at) do
+    now = :os.system_time(:millisecond)
+    "#{user_name}/#{now - started_at}ms: "
+  end
+
+  defp check_message(user_name, started_at, url, received_message, expected_message) do
     clean_received_message = String.replace(received_message, ~r"id: .*\n", "")
 
     try do
@@ -72,7 +77,7 @@ defmodule SseUser do
       LoadTestStats.observe_propagation(delay)
 
       Logger.debug(fn ->
-        "#{user_name}: Propagation delay for message #{message} is #{delay}ms"
+        "#{header(user_name, started_at)} Propagation delay for message #{message} is #{delay}ms"
       end)
 
       if message == expected_message do
@@ -81,12 +86,12 @@ defmodule SseUser do
         LoadTestStats.inc_msg_received_error()
 
         Logger.error(
-          "#{user_name}: Started at: #{started_at}: Received unexpected message on url #{url}: #{received_message} instead of #{expected_message}"
+          "#{header(user_name, started_at)} Received unexpected message on url #{url}: #{inspect(received_message)} instead of #{expected_message}"
         )
       end
     rescue
       e ->
-        Logger.error("#{user_name}: #{inspect(e)}")
+        Logger.error("#{header(user_name, started_at)} #{inspect(e)}")
     end
   end
 end

@@ -34,7 +34,7 @@ ${data.terraform_remote_state.local.outputs.config}
 export NB_USER=${var.nb_users}
 export RELEASE_TMP=/tmp/
 
-_build/prod/rel/load_test/bin/load_test daemon
+_build/prod/rel/load_test/bin/load_test start &
 
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${data.terraform_remote_state.local.outputs.dd_secret} | jq -r .SecretString > /tmp/secret
 
