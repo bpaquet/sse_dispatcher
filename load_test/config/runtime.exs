@@ -2,7 +2,8 @@ import Config
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
-  level: String.to_atom(System.get_env("LOG_LEVEL") || "info")
+  level: String.to_atom(System.get_env("LOG_LEVEL") || "info"),
+  config: [max_no_bytes: 1_000_000_000]
 
 config :load_test, port: String.to_integer(System.get_env("PORT") || "2999")
 config :load_test, nb_user: String.to_integer(System.get_env("NB_USER") || "1")
