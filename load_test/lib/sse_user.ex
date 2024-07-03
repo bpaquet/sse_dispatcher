@@ -19,23 +19,23 @@ defmodule SseUser do
   defp wait_for_messages(user_name, started_at, sse_timeout, url, request_id, [
          first_message | remaining_messages
        ]) do
-    Logger.debug(fn -> "#{user_name}: Waiting for message: #{first_message}" end)
+    Logger.debug(fn -> "#{header(user_name, started_at)} Waiting for message: #{first_message}" end)
 
     receive do
       {:http, {request_id, {:error, msg}}} ->
-        Logger.error("#{user_name}: Started at: #{started_at}: Http error: #{inspect(msg)}")
+        Logger.error("#{header(user_name, started_at)} Http error: #{inspect(msg)}")
         :ok = :httpc.cancel_request(request_id)
-        raise("#{user_name}: Http error")
+        raise("#{header(user_name, started_at)} Http error")
 
       {:http, {request_id, :stream, msg}} ->
         msg = String.trim(msg)
-        Logger.debug(fn -> "#{user_name}: Received message: #{msg}" end)
+        Logger.debug(fn -> "#{header(user_name, started_at)} Received message: #{msg}" end)
         check_message(user_name, started_at, url, msg, first_message)
         wait_for_messages(user_name, started_at, sse_timeout, url, request_id, remaining_messages)
 
       {:http, {request_id, :stream_start, _}} ->
         Logger.info(fn ->
-          "#{user_name}: Connected, waiting: #{length(remaining_messages) + 1} messages, url #{url}"
+          "#{header(user_name, started_at)} Connected, waiting: #{length(remaining_messages) + 1} messages, url #{url}"
         end)
 
         wait_for_messages(user_name, started_at, sse_timeout, url, request_id, [
@@ -43,7 +43,7 @@ defmodule SseUser do
         ])
 
       msg ->
-        Logger.error("#{user_name}: Unexpected message #{inspect(msg)}")
+        Logger.error("#{header(user_name, started_at)} Unexpected message #{inspect(msg)}")
         :ok = :httpc.cancel_request(request_id)
         raise("#{header(user_name, started_at)} Unexpected message")
     after
