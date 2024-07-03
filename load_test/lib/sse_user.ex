@@ -29,7 +29,7 @@ defmodule SseUser do
       {:http, {request_id, :stream, msg}} ->
         msg = String.trim(msg)
         Logger.debug(fn -> "#{user_name}: Received message: #{msg}" end)
-        check_message(user_name, msg, first_message)
+        check_message(user_name, url, msg, first_message)
         wait_for_messages(user_name, sse_timeout, url, request_id, remaining_messages)
 
       {:http, {request_id, :stream_start, _}} ->
@@ -61,7 +61,7 @@ defmodule SseUser do
     Logger.info("#{user_name}: All messages received, url #{url}")
   end
 
-  def check_message(user_name, received_message, expected_message) do
+  def check_message(user_name, url, received_message, expected_message) do
     clean_received_message = String.replace(received_message, ~r"id: .*\n", "")
 
     try do
@@ -80,7 +80,7 @@ defmodule SseUser do
         LoadTestStats.inc_msg_received_error()
 
         Logger.error(
-          "#{user_name}: Received unexpected message: #{received_message} instead of #{expected_message}"
+          "#{user_name}: Received unexpected message on url #{url}: #{received_message} instead of #{expected_message}"
         )
       end
     rescue
