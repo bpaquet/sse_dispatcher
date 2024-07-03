@@ -39,7 +39,11 @@ defmodule Rest do
 
   post "/publish/:topic" do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
-    :ok = Phoenix.PubSub.broadcast!(SSEDispatcher.PubSub, topic, {:pubsub_message, body})
+    message_id = to_string(:os.system_time(:millisecond))
+
+    :ok =
+      Phoenix.PubSub.broadcast!(SSEDispatcher.PubSub, topic, {:pubsub_message, message_id, body})
+
     Logger.debug("Message published on topic: #{topic}")
     SSEStats.inc_msg_received()
 

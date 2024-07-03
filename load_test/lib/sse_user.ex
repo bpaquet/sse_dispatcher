@@ -62,8 +62,10 @@ defmodule SseUser do
   end
 
   def check_message(user_name, received_message, expected_message) do
+    clean_received_message = String.replace(received_message, ~r"id: .*\n", "")
+
     try do
-      [_, ts, message, _, _] = String.split(received_message, " ", parts: 5)
+      [_, ts, message, _, _] = String.split(clean_received_message, " ", parts: 5)
       current_ts = :os.system_time(:millisecond)
       delay = current_ts - String.to_integer(ts)
       LoadTestStats.observe_propagation(delay)

@@ -31,8 +31,8 @@ defmodule Sse do
 
   defp loop(conn, sse_timeout) do
     receive do
-      {:pubsub_message, msg} ->
-        {:ok, conn} = chunk(conn, "data: #{msg}\n\n")
+      {:pubsub_message, msg_id, msg} ->
+        {:ok, conn} = chunk(conn, "id: #{msg_id}\ndata: #{msg}\n\n")
         SSEStats.inc_msg_published()
         loop(conn, sse_timeout)
     after

@@ -27,7 +27,7 @@ variable "nb_users" {
   default = 5000
 }
 
-variable "version_override" {
+variable "sse_dispatcher_revision" {
   type    = string
   default = ""
 }
