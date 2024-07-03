@@ -207,7 +207,8 @@ resource "aws_autoscaling_group" "sse_dispatcher" {
     version = aws_launch_template.sse_dispatcher.latest_version
   }
 
-  health_check_type = "ELB"
+  health_check_type         = "ELB"
+  health_check_grace_period = 120
 
   target_group_arns = [
     aws_lb_target_group.external.arn,

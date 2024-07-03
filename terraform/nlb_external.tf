@@ -49,7 +49,7 @@ resource "aws_lb" "external" {
   subnets         = var.public_subnets
   security_groups = [aws_security_group.external_lb.id]
 
-  enable_cross_zone_load_balancing = true
+  enable_cross_zone_load_balancing = false
 
   tags = {
     Name = "${var.prefix}-sse-dispatcher-external-lb"

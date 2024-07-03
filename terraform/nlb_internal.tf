@@ -29,7 +29,7 @@ resource "aws_lb" "internal" {
   subnets         = var.private_subnets
   security_groups = [aws_security_group.internal_lb.id]
 
-  enable_cross_zone_load_balancing = true
+  enable_cross_zone_load_balancing = false
 
   tags = {
     Name = "${var.prefix}-sse-dispatcher-internal-lb"

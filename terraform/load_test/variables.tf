@@ -19,7 +19,7 @@ variable "min_size" {
 
 variable "max_size" {
   type    = number
-  default = 10
+  default = 100
 }
 
 variable "nb_users" {
