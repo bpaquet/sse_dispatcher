@@ -30,3 +30,6 @@ config :load_test,
 
 config :load_test,
   initial_delay_max: String.to_integer(System.get_env("INITIAL_DELAY_MAX") || "5000")
+
+config :load_test,
+  http_pool_size: String.to_integer(System.get_env("HTTP_POOL_SIZE") || "2000")

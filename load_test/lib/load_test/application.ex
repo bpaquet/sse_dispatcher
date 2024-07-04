@@ -9,8 +9,10 @@ defmodule LoadTest.Application do
   @spec start(any(), any()) :: {:error, any()} | {:ok, pid()}
   def start(_type, _args) do
     {:ok, port} = Application.fetch_env(:load_test, :port)
-    Logger.warning("Current host #{node()}")
-    Logger.warning("Starting Load test on port #{port}")
+    {:ok, http_pool_size} = Application.fetch_env(:load_test, :http_pool_size)
+    Logger.warning("Current host: #{node()}")
+    Logger.warning("Starting Load test on port: #{port}")
+    Logger.warning("Http pool size: #{http_pool_size}")
 
     children = [
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: port]},
@@ -19,7 +21,7 @@ defmodule LoadTest.Application do
       {Finch,
        name: PublishFinch,
        pools: %{
-         :default => [size: 200]
+         :default => [size: http_pool_size]
        }}
     ]
 

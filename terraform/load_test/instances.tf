@@ -35,7 +35,6 @@ ${var.sse_dispatcher_config}
 
 export NB_USER=${var.nb_users}
 export RELEASE_TMP=/tmp/
-export ERL_INETRC=/opt/sse_dispatcher/load_test/erl_inetrc
 
 _build/prod/rel/load_test/bin/load_test start &
 
