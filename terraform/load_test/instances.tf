@@ -35,8 +35,9 @@ ${var.sse_dispatcher_config}
 
 export NB_USER=${var.nb_users}
 export RELEASE_TMP=/tmp/
+export RUN_ERL_LOG_MAXSIZE=1000000000
 
-_build/prod/rel/load_test/bin/load_test start &
+_build/prod/rel/load_test/bin/load_test daemon
 
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${data.terraform_remote_state.local.outputs.dd_secret} | jq -r .SecretString > /tmp/secret
 
