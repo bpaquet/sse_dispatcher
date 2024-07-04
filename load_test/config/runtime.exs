@@ -27,3 +27,6 @@ config :load_test,
 
 config :load_test,
   number_of_messages_max: String.to_integer(System.get_env("NUMBER_OF_MESSAGES_MAX") || "50")
+
+config :load_test,
+  initial_delay_max: String.to_integer(System.get_env("INITIAL_DELAY_MAX") || "5000")

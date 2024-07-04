@@ -1,0 +1,3 @@
+{cache_size, 100}.
+{lookup, [dns]}.
+

@@ -38,6 +38,8 @@ defmodule Main do
     {:ok, number_of_messages_min} = Application.fetch_env(:load_test, :number_of_messages_min)
     {:ok, number_of_messages_max} = Application.fetch_env(:load_test, :number_of_messages_max)
 
+    {:ok, initial_delay_max} = Application.fetch_env(:load_test, :initial_delay_max)
+
     context = %InjectionContext{
       sse_timeout: sse_timeout,
       sse_base_url: sse_base_url,
@@ -54,7 +56,16 @@ defmodule Main do
     Logger.warning("Starting load test with #{nb_user} users")
 
     Enum.map(1..nb_user, fn _ ->
-      Task.Supervisor.async(LoadTest.TaskSupervisor, fn -> run_virtual_user(context) end)
+      Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
+        delay = :rand.uniform(initial_delay_max)
+
+        receive do
+        after
+          delay -> :ok
+        end
+
+        run_virtual_user(context)
+      end)
     end)
 
     {:ok, start_from}
@@ -70,7 +81,9 @@ defmodule Main do
     user_name = "user_#{UUID.uuid4()}"
 
     sse_task =
-      Task.Supervisor.async(LoadTest.TaskSupervisor, fn -> run_sse_user(context, user_name, topic, messages) end)
+      Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
+        run_sse_user(context, user_name, topic, messages)
+      end)
 
     Task.await(sse_task, :infinity)
 
@@ -83,7 +96,10 @@ defmodule Main do
 
   @impl true
   def handle_cast({:start_injector, context, user_name, topic, messages}, state) do
-    Task.Supervisor.start_child(LoadTest.TaskSupervisor, fn -> run_injector(context, user_name, topic, messages) end)
+    Task.Supervisor.start_child(LoadTest.TaskSupervisor, fn ->
+      run_injector(context, user_name, topic, messages)
+    end)
+
     {:noreply, state}
   end
 

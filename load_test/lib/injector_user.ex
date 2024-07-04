@@ -85,19 +85,19 @@ defmodule InjectorUser do
 
         LoadTestStats.inc_msg_published_ok()
 
+        run(
+          user_name,
+          publish_url,
+          rest_timeout,
+          messages,
+          delay_between_messages_min,
+          delay_between_messages_max,
+          start_time
+        )
+
       msg ->
         LoadTestStats.inc_msg_published_error()
         Logger.error("injector_#{user_name}: Unknown message #{inspect(msg)}")
     end
-
-    run(
-      user_name,
-      publish_url,
-      rest_timeout,
-      messages,
-      delay_between_messages_min,
-      delay_between_messages_max,
-      start_time
-    )
   end
 end
