@@ -34,14 +34,7 @@ defmodule SseUser do
       url: url,
       sse_timeout: context.sse_timeout,
       start_injector_callback: fn ->
-        Task.async(fn ->
-          Main.run_injector(
-            context,
-            user_name,
-            topic,
-            expected_messages
-          )
-        end)
+        Main.start_injector(context, user_name, topic, expected_messages)
       end
     }
 

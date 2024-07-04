@@ -31,3 +31,8 @@ variable "sse_dispatcher_revision" {
   type    = string
   default = ""
 }
+
+variable "sse_dispatcher_config" {
+  type    = string
+  default = ""
+}

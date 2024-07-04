@@ -76,7 +76,18 @@ defmodule Main do
     run_virtual_user(context)
   end
 
-  def run_injector(context, user_name, topic, messages) do
+  def start_injector(context, user_name, topic, expected_messages) do
+    Task.async(fn ->
+      run_injector(
+        context,
+        user_name,
+        topic,
+        expected_messages
+      )
+    end)
+  end
+
+  defp run_injector(context, user_name, topic, messages) do
     try do
       InjectorUser.start(
         user_name,
