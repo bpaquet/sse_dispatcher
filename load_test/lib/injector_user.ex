@@ -63,37 +63,41 @@ defmodule InjectorUser do
       "injector_#{user_name}: Publishing #{inspect(raw_message)}, remaining #{length(messages)}"
     end)
 
-    headers = []
+    headers = [
+      {"Content-Type", "application/octet-stream"}
+    ]
 
     result =
-      :httpc.request(
-        :post,
-        {publish_url, headers, ~c"application/octet-stream", raw_message},
-        [{:timeout, rest_timeout}, {:connect_timeout, rest_timeout}],
-        []
-      )
+      Finch.build(:post, publish_url, headers, raw_message)
+      |> Finch.request(PublishFinch)
 
     case result do
-      {:error, error} ->
-        Logger.error("injector_#{user_name}: Error publishing message: #{inspect(error)}")
-        LoadTestStats.inc_msg_published_error()
+      {:ok, http_result} ->
+        case http_result.status do
+          200 ->
+            Logger.debug(fn ->
+              "injector_#{user_name}: Message published: #{inspect(first_message)}"
+            end)
 
-      {:ok, {{_, 200, _}, _, _}} ->
-        Logger.debug(fn ->
-          "injector_#{user_name}: Message published: #{inspect(first_message)}"
-        end)
+            LoadTestStats.inc_msg_published_ok()
 
-        LoadTestStats.inc_msg_published_ok()
+            run(
+              user_name,
+              publish_url,
+              rest_timeout,
+              messages,
+              delay_between_messages_min,
+              delay_between_messages_max,
+              start_time
+            )
 
-        run(
-          user_name,
-          publish_url,
-          rest_timeout,
-          messages,
-          delay_between_messages_min,
-          delay_between_messages_max,
-          start_time
-        )
+          other ->
+            LoadTestStats.inc_msg_published_error()
+
+            Logger.error(fn ->
+              "injector_#{user_name}: Error publishing message #{inspect(first_message)}, status: #{other}"
+            end)
+        end
 
       msg ->
         LoadTestStats.inc_msg_published_error()

@@ -15,7 +15,12 @@ defmodule LoadTest.Application do
     children = [
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: port]},
       {Task.Supervisor, name: LoadTest.TaskSupervisor},
-      {Main, []}
+      {Main, []},
+      {Finch,
+       name: PublishFinch,
+       pools: %{
+         :default => [size: 200]
+       }}
     ]
 
     MetricsPlugExporter.setup()

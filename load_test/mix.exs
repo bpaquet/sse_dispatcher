@@ -34,7 +34,8 @@ defmodule LoadTest.MixProject do
       {:prometheus_ex, "~> 3.1"},
       {:prometheus_plugs, "~> 1.0"},
       {:parent, "~> 0.12"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:finch, "~> 0.18"}
     ]
   end
 end
