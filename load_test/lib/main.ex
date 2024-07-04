@@ -69,7 +69,7 @@ defmodule Main do
     user_name = "user_#{UUID.uuid4()}"
 
     sse_task =
-      Task.async(fn -> run_sse_user(context, user_name, topic, messages) end)
+      Task.Supervisor.async(LoadTest.TaskSupervisor, fn -> run_sse_user(context, user_name, topic, messages) end)
 
     Task.await(sse_task, :infinity)
 
