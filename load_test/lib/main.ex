@@ -77,7 +77,7 @@ defmodule Main do
   end
 
   def start_injector(context, user_name, topic, expected_messages) do
-    Task.async(fn ->
+    Task.start(fn ->
       run_injector(
         context,
         user_name,

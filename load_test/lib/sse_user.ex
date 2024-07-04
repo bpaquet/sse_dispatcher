@@ -70,8 +70,7 @@ defmodule SseUser do
         Logger.error("#{header(state)} Unexpected message #{inspect(msg)}")
         :ok = :httpc.cancel_request(request_id)
         raise("#{header(state)} Unexpected message")
-    after
-      state.sse_timeout ->
+      after state.sse_timeout ->
         Logger.error(
           "#{header(state)} Timeout waiting for message (timeout=#{state.sse_timeout}ms), remaining: #{length(remaining_messages) + 1} messages, url #{state.url}"
         )
