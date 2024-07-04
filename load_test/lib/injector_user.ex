@@ -56,8 +56,11 @@ defmodule InjectorUser do
     Logger.debug(fn -> "injector_#{user_name}: Sleep=#{sleep}ms" end)
     :timer.sleep(sleep)
 
+    raw_message =
+      "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{publish_url}"
+
     Logger.debug(fn ->
-      "injector_#{user_name}: Publishing #{first_message}, remaining #{length(messages)}"
+      "injector_#{user_name}: Publishing #{inspect(raw_message)}, remaining #{length(messages)}"
     end)
 
     headers = []
@@ -65,8 +68,7 @@ defmodule InjectorUser do
     result =
       :httpc.request(
         :post,
-        {publish_url, headers, ~c"application/octet-stream",
-         "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{publish_url}"},
+        {publish_url, headers, ~c"application/octet-stream", raw_message},
         [{:timeout, rest_timeout}, {:connect_timeout, rest_timeout}],
         []
       )

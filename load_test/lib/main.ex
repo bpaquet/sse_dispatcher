@@ -2,6 +2,19 @@ defmodule Main do
   use GenServer
   require Logger
 
+  defmodule InjectionContext do
+    defstruct [
+      :sse_timeout,
+      :sse_base_url,
+      :rest_base_url,
+      :rest_timeout,
+      :delay_between_messages_min,
+      :delay_between_messages_max,
+      :number_of_messages_min,
+      :number_of_messages_max
+    ]
+  end
+
   def start_link(start_from, opts \\ []) do
     GenServer.start_link(__MODULE__, start_from, opts)
   end
@@ -24,110 +37,72 @@ defmodule Main do
     {:ok, number_of_messages_min} = Application.fetch_env(:load_test, :number_of_messages_min)
     {:ok, number_of_messages_max} = Application.fetch_env(:load_test, :number_of_messages_max)
 
+    context = %InjectionContext{
+      sse_timeout: sse_timeout,
+      sse_base_url: sse_base_url,
+      rest_base_url: rest_base_url,
+      rest_timeout: rest_timeout,
+      delay_between_messages_min: delay_between_messages_min,
+      delay_between_messages_max: delay_between_messages_max,
+      number_of_messages_min: number_of_messages_min,
+      number_of_messages_max: number_of_messages_max
+    }
+
     Logger.warning("SSE BASE URL: #{sse_base_url}")
     Logger.warning("REST BASE URL: #{rest_base_url}")
     Logger.warning("Starting load test with #{nb_user} users")
 
     Enum.map(1..nb_user, fn _ ->
-      Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
-        run_virtual_user(
-          rest_base_url,
-          rest_timeout,
-          sse_base_url,
-          sse_timeout,
-          number_of_messages_min,
-          number_of_messages_max,
-          delay_between_messages_min,
-          delay_between_messages_max
-        )
-      end)
+      Task.Supervisor.async(LoadTest.TaskSupervisor, fn -> run_virtual_user(context) end)
     end)
 
     {:ok, start_from}
   end
 
-  defp run_virtual_user(
-         rest_base_url,
-         rest_timeout,
-         sse_base_url,
-         sse_timeout,
-         number_of_messages_min,
-         number_of_messages_max,
-         delay_between_messages_min,
-         delay_between_messages_max
-       ) do
+  defp run_virtual_user(context) do
     number_of_messages =
-      :rand.uniform(number_of_messages_max - number_of_messages_min) + number_of_messages_min
+      :rand.uniform(context.number_of_messages_max - context.number_of_messages_min) +
+        context.number_of_messages_min
 
     messages = Enum.map(1..number_of_messages, fn _ -> UUID.uuid4() end)
     topic = "topic_#{UUID.uuid4()}"
     user_name = "user_#{UUID.uuid4()}"
 
     sse_task =
-      Task.async(fn -> run_sse_user(user_name, topic, sse_base_url, sse_timeout, messages) end)
-
-    injector_task =
-      Task.async(fn ->
-        run_injector(
-          user_name,
-          topic,
-          rest_base_url,
-          rest_timeout,
-          messages,
-          delay_between_messages_min,
-          delay_between_messages_max
-        )
-      end)
+      Task.async(fn -> run_sse_user(context, user_name, topic, messages) end)
 
     Task.await(sse_task, :infinity)
-    Task.await(injector_task, :infinity)
 
-    run_virtual_user(
-      rest_base_url,
-      rest_timeout,
-      sse_base_url,
-      sse_timeout,
-      number_of_messages_min,
-      number_of_messages_max,
-      delay_between_messages_min,
-      delay_between_messages_max
-    )
+    run_virtual_user(context)
   end
 
-  defp run_injector(
-         user_name,
-         topic,
-         rest_base_url,
-         rest_timeout,
-         messages,
-         delay_between_messages_min,
-         delay_between_messages_max
-       ) do
+  def run_injector(context, user_name, topic, messages) do
     try do
       InjectorUser.start(
         user_name,
-        "#{rest_base_url}/#{topic}",
-        rest_timeout,
+        "#{context.rest_base_url}/#{topic}",
+        context.rest_timeout,
         messages,
-        delay_between_messages_min,
-        delay_between_messages_max
+        context.delay_between_messages_min,
+        context.delay_between_messages_max
       )
 
       :ok
     rescue
-      _ ->
+      x ->
+        Logger.error("injector_#{user_name}: Error #{inspect(x)}")
         :error
     end
   end
 
-  defp run_sse_user(user_name, topic, sse_base_url, sse_timeout, messages) do
+  defp run_sse_user(context, user_name, topic, messages) do
     LoadTestStats.inc_user_running()
 
     try do
       SseUser.run(
+        context,
         user_name,
-        sse_timeout,
-        "#{sse_base_url}/#{topic}",
+        topic,
         messages
       )
 
@@ -135,7 +110,8 @@ defmodule Main do
       LoadTestStats.inc_user_ok()
       :ok
     rescue
-      _ ->
+      x ->
+        Logger.error("#{user_name}: Error #{inspect(x)}")
         LoadTestStats.dec_user_running()
         LoadTestStats.inc_user_error()
         :error
