@@ -53,7 +53,7 @@ defmodule InjectorUser do
       :rand.uniform(delay_between_messages_max - delay_between_messages_min) +
         delay_between_messages_min
 
-    Logger.debug(fn -> "injector_#{user_name}: Sleep=#{sleep}ms" end)
+    Logger.debug(fn -> "injector_#{user_name}: sleep=#{sleep}ms" end)
     :timer.sleep(sleep)
 
     raw_message =
@@ -79,7 +79,7 @@ defmodule InjectorUser do
         Logger.error("injector_#{user_name}: Error publishing message: #{inspect(error)}")
 
       {:ok, {{_, 200, _}, _, _}} ->
-        Logger.debug(fn -> "injector_#{user_name}: Message published: #{first_message}" end)
+        Logger.info(fn -> "injector_#{user_name}: Message published: #{inspect(first_message)}" end)
         LoadTestStats.inc_msg_published_ok()
 
       msg ->
