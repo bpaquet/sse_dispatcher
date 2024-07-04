@@ -70,9 +70,7 @@ defmodule Main do
     user_name = "user_#{UUID.uuid4()}"
 
     sse_task =
-      Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
-        run_sse_user(context, user_name, topic, messages)
-      end)
+      Task.Supervisor.async(LoadTest.TaskSupervisor, fn -> run_sse_user(context, user_name, topic, messages) end)
 
     Task.await(sse_task, :infinity)
 
@@ -85,10 +83,7 @@ defmodule Main do
 
   @impl true
   def handle_cast({:start_injector, context, user_name, topic, messages}, state) do
-    Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
-      run_injector(context, user_name, topic, messages)
-    end)
-
+    Task.Supervisor.start_child(LoadTest.TaskSupervisor, fn -> run_injector(context, user_name, topic, messages) end)
     {:noreply, state}
   end
 
@@ -135,7 +130,7 @@ defmodule Main do
   end
 
   @impl true
-  def handle_info(_, state) do
+  def handle_info({_, :ok}, state) do
     {:noreply, state}
   end
 end
