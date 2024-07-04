@@ -15,10 +15,11 @@ defmodule Main do
     ]
   end
 
-  def start_link(start_from, opts \\ []) do
-    GenServer.start_link(__MODULE__, start_from, opts)
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
+  @impl true
   def init(start_from) do
     {:ok, nb_user} = Application.fetch_env(:load_test, :nb_user)
 
@@ -69,22 +70,26 @@ defmodule Main do
     user_name = "user_#{UUID.uuid4()}"
 
     sse_task =
-      Task.Supervisor.async(LoadTest.TaskSupervisor, fn -> run_sse_user(context, user_name, topic, messages) end)
+      Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
+        run_sse_user(context, user_name, topic, messages)
+      end)
 
     Task.await(sse_task, :infinity)
 
     run_virtual_user(context)
   end
 
-  def start_injector(context, user_name, topic, expected_messages) do
-    Task.start(fn ->
-      run_injector(
-        context,
-        user_name,
-        topic,
-        expected_messages
-      )
+  def start_injector(context, user_name, topic, messages) do
+    GenServer.cast(__MODULE__, {:start_injector, context, user_name, topic, messages})
+  end
+
+  @impl true
+  def handle_cast({:start_injector, context, user_name, topic, messages}, state) do
+    Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->
+      run_injector(context, user_name, topic, messages)
     end)
+
+    {:noreply, state}
   end
 
   defp run_injector(context, user_name, topic, messages) do
@@ -129,6 +134,8 @@ defmodule Main do
     end
   end
 
-  def handle_info({_, :ok}, []) do
+  @impl true
+  def handle_info(_, state) do
+    {:noreply, state}
   end
 end

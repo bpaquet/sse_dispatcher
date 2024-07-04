@@ -79,7 +79,10 @@ defmodule InjectorUser do
         LoadTestStats.inc_msg_published_error()
 
       {:ok, {{_, 200, _}, _, _}} ->
-        Logger.debug(fn -> "injector_#{user_name}: Message published: #{inspect(first_message)}" end)
+        Logger.debug(fn ->
+          "injector_#{user_name}: Message published: #{inspect(first_message)}"
+        end)
+
         LoadTestStats.inc_msg_published_ok()
 
       msg ->
