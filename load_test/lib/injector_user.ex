@@ -59,7 +59,7 @@ defmodule InjectorUser do
     raw_message =
       "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{publish_url}"
 
-    Logger.info(fn ->
+    Logger.debug(fn ->
       "injector_#{user_name}: Publishing #{inspect(raw_message)}, remaining #{length(messages)}"
     end)
 
@@ -75,11 +75,11 @@ defmodule InjectorUser do
 
     case result do
       {:error, error} ->
-        LoadTestStats.inc_msg_published_error()
         Logger.error("injector_#{user_name}: Error publishing message: #{inspect(error)}")
+        LoadTestStats.inc_msg_published_error()
 
       {:ok, {{_, 200, _}, _, _}} ->
-        Logger.info(fn -> "injector_#{user_name}: Message published: #{inspect(first_message)}" end)
+        Logger.debug(fn -> "injector_#{user_name}: Message published: #{inspect(first_message)}" end)
         LoadTestStats.inc_msg_published_ok()
 
       msg ->
