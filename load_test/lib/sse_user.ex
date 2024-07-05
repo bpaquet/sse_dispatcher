@@ -76,6 +76,8 @@ defmodule SseUser do
           "#{header(state)} Timeout waiting for message (timeout=#{state.sse_timeout}ms), remaining: #{length(remaining_messages) + 1} messages, url #{state.url}"
         )
 
+        LoadTestStats.inc_msg_received_timeout()
+
         :ok = :httpc.cancel_request(request_id)
         raise("#{header(state)} Timeout waiting for message")
     end
