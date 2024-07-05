@@ -105,14 +105,7 @@ defmodule Main do
 
   defp run_injector(context, user_name, topic, messages) do
     try do
-      InjectorUser.start(
-        user_name,
-        "#{context.rest_base_url}/#{topic}",
-        context.rest_timeout,
-        messages,
-        context.delay_between_messages_min,
-        context.delay_between_messages_max
-      )
+      InjectorUser.start(context, user_name, "#{context.rest_base_url}/#{topic}", messages)
 
       :ok
     rescue

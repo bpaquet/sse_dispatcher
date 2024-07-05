@@ -47,7 +47,9 @@ echo "instances:
   - prometheus_url: http://localhost:2999/metrics
     namespace: sse_dispatcher_load_test
     metrics:
-    - '*'
+    - messages
+    - user_running
+    - users
 " >> /etc/datadog-agent/conf.d/prometheus.d/conf.yaml
 service datadog-agent restart
 EOF
