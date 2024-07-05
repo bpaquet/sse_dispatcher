@@ -119,12 +119,7 @@ defmodule Main do
     LoadTestStats.inc_user_running()
 
     try do
-      SseUser.run(
-        context,
-        user_name,
-        topic,
-        messages
-      )
+      SseUser.run(context, user_name, topic, messages)
 
       LoadTestStats.dec_user_running()
       LoadTestStats.inc_user_ok()
