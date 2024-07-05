@@ -66,7 +66,10 @@ defmodule InjectorUser do
 
     result =
       Finch.build(:post, state.publish_url, headers, raw_message)
-      |> Finch.request(PublishFinch)
+      |> Finch.request(PublishFinch,
+        receive_timeout: state.rest_timeout,
+        pool_timeout: state.rest_timeout
+      )
 
     case result do
       {:ok, http_result} ->
