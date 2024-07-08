@@ -49,6 +49,8 @@ echo "instances:
     - messages
     - user_running
     - users
+    - propagation_delay_sum
+    - propagation_delay_count
 " >> /etc/datadog-agent/conf.d/prometheus.d/conf.yaml
 service datadog-agent restart
 EOF
