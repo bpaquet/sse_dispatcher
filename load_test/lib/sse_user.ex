@@ -49,6 +49,7 @@ defmodule SseUser do
       {:http, {_, {:error, msg}}} ->
         Logger.error("#{header(state)} Http error: #{inspect(msg)}")
         :ok = :httpc.cancel_request(request_id)
+        LoadTestStats.inc_msg_received_http_error()
         raise("#{header(state)} Http error")
 
       {:http, {_, :stream, msg}} ->
@@ -112,7 +113,7 @@ defmodule SseUser do
       if message == expected_message do
         LoadTestStats.inc_msg_received_ok()
       else
-        LoadTestStats.inc_msg_received_error()
+        LoadTestStats.inc_msg_received_unexpected_message()
 
         Logger.error(
           "#{header(state)} Received unexpected message on url #{state.url}: #{inspect(received_message)} instead of #{expected_message}"

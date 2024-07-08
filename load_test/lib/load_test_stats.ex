@@ -29,6 +29,8 @@ defmodule LoadTestStats do
     Gauge.set([name: :users, labels: [:error]], 0)
     Gauge.set([name: :messages, labels: [:received, :ok]], 0)
     Gauge.set([name: :messages, labels: [:received, :error]], 0)
+    Gauge.set([name: :messages, labels: [:received, :timeout]], 0)
+    Gauge.set([name: :messages, labels: [:received, :http_error]], 0)
     Gauge.set([name: :messages, labels: [:published, :ok]], 0)
     Gauge.set([name: :messages, labels: [:published, :error]], 0)
 
@@ -52,6 +54,14 @@ defmodule LoadTestStats do
 
   def inc_msg_received_error() do
     Gauge.inc(name: :messages, labels: [:received, :error])
+  end
+
+  def inc_msg_received_unexpected_message() do
+    Gauge.inc(name: :messages, labels: [:received, :unepected_message])
+  end
+
+  def inc_msg_received_http_error() do
+    Gauge.inc(name: :messages, labels: [:received, :http_error])
   end
 
   def inc_msg_received_timeout() do
