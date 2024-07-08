@@ -1,7 +1,21 @@
 defmodule SseUser do
   require Logger
 
-  def run(user_name, sse_timeout, url, expected_messages) do
+  defmodule SseUserState do
+    defstruct [
+      :user_name,
+      :start_time,
+      :all_messages,
+      :current_message,
+      :url,
+      :sse_timeout,
+      :start_injector_callback
+    ]
+  end
+
+  def run(context, user_name, topic, expected_messages) do
+    url = "#{context.sse_base_url}/#{topic}"
+
     Logger.debug(fn ->
       "#{user_name}: Starting SSE client on url #{url}, expecting #{length(expected_messages)} messages"
     end)
@@ -12,57 +26,75 @@ defmodule SseUser do
     {:ok, request_id} =
       :httpc.request(:get, {url, headers}, http_request_opts, [{:sync, false}, {:stream, :self}])
 
-    started_at = :os.system_time(:millisecond)
-    wait_for_messages(user_name, started_at, sse_timeout, url, request_id, expected_messages)
+    state = %SseUserState{
+      user_name: user_name,
+      start_time: :os.system_time(:millisecond),
+      all_messages: length(expected_messages),
+      current_message: -1,
+      url: url,
+      sse_timeout: context.sse_timeout,
+      start_injector_callback: fn ->
+        Main.start_injector(context, user_name, topic, expected_messages)
+      end
+    }
+
+    # Adding a padding message for the connection message
+    wait_for_messages(state, request_id, ["" | expected_messages])
   end
 
-  defp wait_for_messages(user_name, started_at, sse_timeout, url, request_id, [
-         first_message | remaining_messages
-       ]) do
-    Logger.debug(fn -> "#{user_name}: Waiting for message: #{first_message}" end)
+  defp wait_for_messages(state, request_id, [first_message | remaining_messages]) do
+    Logger.debug(fn -> "#{header(state)} Waiting for message: #{first_message}" end)
 
     receive do
-      {:http, {request_id, {:error, msg}}} ->
-        Logger.error("#{user_name}: Started at: #{started_at}: Http error: #{inspect(msg)}")
+      {:http, {_, {:error, msg}}} ->
+        Logger.error("#{header(state)} Http error: #{inspect(msg)}")
         :ok = :httpc.cancel_request(request_id)
-        raise("#{user_name}: Http error")
+        raise("#{header(state)} Http error")
 
-      {:http, {request_id, :stream, msg}} ->
+      {:http, {_, :stream, msg}} ->
         msg = String.trim(msg)
-        Logger.debug(fn -> "#{user_name}: Received message: #{msg}" end)
-        check_message(user_name, started_at, url, msg, first_message)
-        wait_for_messages(user_name, started_at, sse_timeout, url, request_id, remaining_messages)
+        Logger.debug(fn -> "#{header(state)} Received message: #{inspect(msg)}" end)
+        check_message(state, msg, first_message)
 
-      {:http, {request_id, :stream_start, _}} ->
+      {:http, {_, :stream_start, _}} ->
         Logger.info(fn ->
-          "#{user_name}: Connected, waiting: #{length(remaining_messages) + 1} messages, url #{url}"
+          "#{header(state)} Connected, waiting: #{length(remaining_messages) + 1} messages, url #{state.url}"
         end)
 
-        wait_for_messages(user_name, started_at, sse_timeout, url, request_id, [
-          first_message | remaining_messages
-        ])
+        state.start_injector_callback.()
 
       msg ->
-        Logger.error("#{user_name}: Unexpected message #{inspect(msg)}")
+        Logger.error("#{header(state)} Unexpected message #{inspect(msg)}")
         :ok = :httpc.cancel_request(request_id)
-        raise("#{user_name}: Started at: #{started_at}: Unexpected message")
+        raise("#{header(state)} Unexpected message")
     after
-      sse_timeout ->
+      state.sse_timeout ->
         Logger.error(
-          "#{user_name}: Started at: #{started_at}: Timeout waiting for message (timeout=#{sse_timeout}ms), remaining: #{length(remaining_messages) + 1} messages, url #{url}"
+          "#{header(state)} Timeout waiting for message (timeout=#{state.sse_timeout}ms), remaining: #{length(remaining_messages) + 1} messages, url #{state.url}"
         )
 
+        LoadTestStats.inc_msg_received_timeout()
+
         :ok = :httpc.cancel_request(request_id)
-        raise("#{user_name}: Started at: #{started_at}: Timeout waiting for message")
+        raise("#{header(state)} Timeout waiting for message")
     end
+
+    state = Map.put(state, :current_message, state.current_message + 1)
+    wait_for_messages(state, request_id, remaining_messages)
   end
 
-  defp wait_for_messages(user_name, _, _, url, request_id, []) do
+  defp wait_for_messages(state, request_id, []) do
     :ok = :httpc.cancel_request(request_id)
-    Logger.info("#{user_name}: All messages received, url #{url}")
+    Logger.info("#{header(state)} All messages received, url #{state.url}")
   end
 
-  def check_message(user_name, started_at, url, received_message, expected_message) do
+  defp header(state) do
+    now = :os.system_time(:millisecond)
+
+    "#{state.user_name} / #{now - state.start_time} ms / #{state.current_message} < #{state.all_messages}: "
+  end
+
+  defp check_message(state, received_message, expected_message) do
     clean_received_message = String.replace(received_message, ~r"id: .*\n", "")
 
     try do
@@ -72,7 +104,7 @@ defmodule SseUser do
       LoadTestStats.observe_propagation(delay)
 
       Logger.debug(fn ->
-        "#{user_name}: Propagation delay for message #{message} is #{delay}ms"
+        "#{header(state)} Propagation delay for message #{message} is #{delay}ms"
       end)
 
       if message == expected_message do
@@ -81,12 +113,12 @@ defmodule SseUser do
         LoadTestStats.inc_msg_received_error()
 
         Logger.error(
-          "#{user_name}: Started at: #{started_at}: Received unexpected message on url #{url}: #{received_message} instead of #{expected_message}"
+          "#{header(state)} Received unexpected message on url #{state.url}: #{inspect(received_message)} instead of #{expected_message}"
         )
       end
     rescue
       e ->
-        Logger.error("#{user_name}: #{inspect(e)}")
+        Logger.error("#{header(state)} #{inspect(e)}")
     end
   end
 end

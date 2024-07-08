@@ -2,8 +2,7 @@ import Config
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
-  level: String.to_atom(System.get_env("LOG_LEVEL") || "info"),
-  max_no_bytes: 1_000_000_000
+  level: String.to_atom(System.get_env("LOG_LEVEL") || "info")
 
 config :load_test, port: String.to_integer(System.get_env("PORT") || "2999")
 config :load_test, nb_user: String.to_integer(System.get_env("NB_USER") || "1")
@@ -28,3 +27,9 @@ config :load_test,
 
 config :load_test,
   number_of_messages_max: String.to_integer(System.get_env("NUMBER_OF_MESSAGES_MAX") || "50")
+
+config :load_test,
+  initial_delay_max: String.to_integer(System.get_env("INITIAL_DELAY_MAX") || "5000")
+
+config :load_test,
+  http_pool_size: String.to_integer(System.get_env("HTTP_POOL_SIZE") || "2000")

@@ -50,3 +50,8 @@ variable "max_size" {
 variable "acm_domain" {
   type = string
 }
+
+variable "health_check_min_cluster_size" {
+  type    = number
+  default = 1
+}

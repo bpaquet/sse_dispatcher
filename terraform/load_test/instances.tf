@@ -31,8 +31,11 @@ ulimit -n 1000000
 
 ${data.terraform_remote_state.local.outputs.config}
 
+${var.sse_dispatcher_config}
+
 export NB_USER=${var.nb_users}
 export RELEASE_TMP=/tmp/
+export RUN_ERL_LOG_MAXSIZE=1000000000
 
 _build/prod/rel/load_test/bin/load_test daemon
 
@@ -44,7 +47,9 @@ echo "instances:
   - prometheus_url: http://localhost:2999/metrics
     namespace: sse_dispatcher_load_test
     metrics:
-    - '*'
+    - messages
+    - user_running
+    - users
 " >> /etc/datadog-agent/conf.d/prometheus.d/conf.yaml
 service datadog-agent restart
 EOF

@@ -1,14 +1,18 @@
 defmodule InjectorUser do
   require Logger
 
-  def start(
-        user_name,
-        publish_url,
-        rest_timeout,
-        messages,
-        delay_between_messages_min,
-        delay_between_messages_max
-      ) do
+  defmodule InjectorUserState do
+    defstruct [
+      :user_name,
+      :publish_url,
+      :rest_timeout,
+      :delay_between_messages_min,
+      :delay_between_messages_max,
+      :start_time
+    ]
+  end
+
+  def start(context, user_name, publish_url, messages) do
     Logger.debug(fn ->
       "injector_#{user_name}: Starting injector user, #{length(messages)} messages to publish"
     end)
@@ -17,82 +21,79 @@ defmodule InjectorUser do
     sleep = :rand.uniform(1000) + 500
     :timer.sleep(sleep)
 
-    Logger.info(fn ->
-      "injector_#{user_name}: Start publishing #{length(messages)} messages to #{publish_url}"
-    end)
-
-    run(
-      user_name,
-      publish_url,
-      rest_timeout,
-      messages,
-      delay_between_messages_min,
-      delay_between_messages_max,
-      start_time
-    )
-  end
-
-  defp run(user_name, publish_url, _, [], _, _, start_time) do
-    duration = :os.system_time(:millisecond) - start_time
+    state = %InjectorUserState{
+      user_name: user_name,
+      publish_url: publish_url,
+      rest_timeout: context.rest_timeout,
+      delay_between_messages_min: context.delay_between_messages_min,
+      delay_between_messages_max: context.delay_between_messages_max,
+      start_time: start_time
+    }
 
     Logger.info(fn ->
-      "injector_#{user_name}: All messages published to #{publish_url}, duration: #{duration / 1000}"
+      "injector_#{state.user_name}: Start publishing #{length(messages)} messages to #{state.publish_url}"
+    end)
+
+    run(state, messages)
+  end
+
+  defp run(state, []) do
+    duration = :os.system_time(:millisecond) - state.start_time
+
+    Logger.info(fn ->
+      "injector_#{state.user_name}: All messages published to #{state.publish_url}, duration: #{duration / 1000}"
     end)
   end
 
-  defp run(
-         user_name,
-         publish_url,
-         rest_timeout,
-         [first_message | messages],
-         delay_between_messages_min,
-         delay_between_messages_max,
-         start_time
-       ) do
+  defp run(state, [first_message | messages]) do
     sleep =
-      :rand.uniform(delay_between_messages_max - delay_between_messages_min) +
-        delay_between_messages_min
+      :rand.uniform(state.delay_between_messages_max - state.delay_between_messages_min) +
+        state.delay_between_messages_min
 
-    Logger.debug(fn -> "injector_#{user_name}: Sleep=#{sleep}ms" end)
+    Logger.debug(fn -> "injector_#{state.user_name}: sleep=#{sleep}ms" end)
     :timer.sleep(sleep)
 
+    raw_message =
+      "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{state.publish_url}"
+
     Logger.debug(fn ->
-      "injector_#{user_name}: Publishing #{first_message}, remaining #{length(messages)}"
+      "injector_#{state.user_name}: Publishing #{inspect(raw_message)}, remaining #{length(messages)}"
     end)
 
-    headers = []
+    headers = [
+      {"Content-Type", "application/octet-stream"}
+    ]
 
     result =
-      :httpc.request(
-        :post,
-        {publish_url, headers, ~c"application/octet-stream",
-         "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{publish_url}"},
-        [{:timeout, rest_timeout}, {:connect_timeout, rest_timeout}],
-        []
+      Finch.build(:post, state.publish_url, headers, raw_message)
+      |> Finch.request(PublishFinch,
+        receive_timeout: state.rest_timeout,
+        pool_timeout: state.rest_timeout
       )
 
     case result do
-      {:error, error} ->
-        LoadTestStats.inc_msg_published_error()
-        Logger.error("injector_#{user_name}: Error publishing message: #{inspect(error)}")
+      {:ok, http_result} ->
+        case http_result.status do
+          200 ->
+            Logger.debug(fn ->
+              "injector_#{state.user_name}: Message published: #{inspect(first_message)}"
+            end)
 
-      {:ok, {{_, 200, _}, _, _}} ->
-        Logger.debug(fn -> "injector_#{user_name}: Message published: #{first_message}" end)
-        LoadTestStats.inc_msg_published_ok()
+            LoadTestStats.inc_msg_published_ok()
+
+          other ->
+            LoadTestStats.inc_msg_published_error()
+
+            raise(
+              "injector_#{state.user_name}: Error publishing message #{inspect(first_message)}, status: #{other}"
+            )
+        end
 
       msg ->
         LoadTestStats.inc_msg_published_error()
-        Logger.error("injector_#{user_name}: Unknown message #{inspect(msg)}")
+        raise("injector_#{state.user_name}: Unknown message #{inspect(msg)}")
     end
 
-    run(
-      user_name,
-      publish_url,
-      rest_timeout,
-      messages,
-      delay_between_messages_min,
-      delay_between_messages_max,
-      start_time
-    )
+    run(state, messages)
   end
 end

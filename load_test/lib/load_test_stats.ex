@@ -54,6 +54,10 @@ defmodule LoadTestStats do
     Gauge.inc(name: :messages, labels: [:received, :error])
   end
 
+  def inc_msg_received_timeout() do
+    Gauge.inc(name: :messages, labels: [:received, :timeout])
+  end
+
   def inc_user_ok() do
     Gauge.inc(name: :users, labels: [:ok])
   end
