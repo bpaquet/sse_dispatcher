@@ -56,9 +56,11 @@ defmodule SseUser do
         Logger.debug(fn -> "#{header(state)} Received message: #{inspect(msg)}" end)
         check_message(state, msg, first_message)
 
-      {:http, {_, :stream_start, _}} ->
+      {:http, {_, :stream_start, headers}} ->
+        {~c"x-sse-server", server} = List.keyfind(headers, ~c"x-sse-server", 0)
+
         Logger.info(fn ->
-          "#{header(state)} Connected, waiting: #{length(remaining_messages) + 1} messages, url #{state.url}"
+          "#{header(state)} Connected, waiting: #{length(remaining_messages) + 1} messages, url #{state.url}, remote server: #{server}"
         end)
 
         state.start_injector_callback.()

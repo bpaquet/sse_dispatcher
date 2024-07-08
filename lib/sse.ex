@@ -19,7 +19,7 @@ defmodule Sse do
     conn = put_resp_header(conn, "cache-control", "no-cache")
     conn = put_resp_header(conn, "connection", "close")
     conn = put_resp_header(conn, "access-control-allow-origin", "*")
-    conn = put_resp_header(conn, "X-SSE-Server", to_string(node()))
+    conn = put_resp_header(conn, "x-sse-server", to_string(node()))
     :ok = Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
     conn = send_chunked(conn, 200)
 
