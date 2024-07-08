@@ -26,12 +26,19 @@ defmodule SSEDispatcher.Application do
       transport_options: [max_connections: :infinity]
     ]
 
-    {sse_http_scheme, sse_http_config} = if ssl_keyfile != nil do
+    {sse_http_scheme, sse_http_config} =
+      if ssl_keyfile != nil do
         Logger.warning(
           "Starting HTTPS Server #{sse_port}, with keyfile: #{ssl_keyfile}, certfile: #{ssl_certfile}"
         )
 
-        http_config = Keyword.merge(base_sse_http_config, [keyfile: ssl_keyfile, certfile: ssl_certfile, otp_app: :sse_dispatcher])
+        http_config =
+          Keyword.merge(base_sse_http_config,
+            keyfile: ssl_keyfile,
+            certfile: ssl_certfile,
+            otp_app: :sse_dispatcher
+          )
+
         {:https, http_config}
       else
         Logger.warning("Starting HTTP Server #{sse_port} without SSL")
