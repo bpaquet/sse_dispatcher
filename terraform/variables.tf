@@ -55,3 +55,8 @@ variable "health_check_min_cluster_size" {
 variable "ssl_secret" {
   type = string
 }
+
+variable "acm_domain" {
+  type = string
+  default = ""
+}

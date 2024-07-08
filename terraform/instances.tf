@@ -12,7 +12,7 @@ mkdir /tmp/ssl
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.ssl_secret} | jq .SecretString -r | jq .KEY -r > /tmp/ssl/key
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.ssl_secret} | jq .SecretString -r | jq -r .CERT > /tmp/ssl/cert
 
-docker run -d --network=host -e EC2_CLUSTER_TAG -e EC2_CLUSTER_VALUE  -v /tmp/ssl:/tmp/ssl -e SSL_KEYFILE=/tmp/ssl/key -e SSL_CERTFILE=/tmp/ssl/cert --ulimit nofile=1000000:1000000 ${var.docker_image}
+docker run -d --network=host -e EC2_CLUSTER_TAG -e EC2_CLUSTER_VALUE  ${var.acm_domain != "" ? "" : "-v /tmp/ssl:/tmp/ssl -e SSL_KEYFILE=/tmp/ssl/key -e SSL_CERTFILE=/tmp/ssl/cert"} --ulimit nofile=1000000:1000000 ${var.docker_image}
 
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.dd_secret} | jq -r .SecretString > /tmp/secret
 
@@ -25,8 +25,6 @@ echo "instances:
     - messages
     - current_connections
     - connections
-    - propagation_delay_sum
-    - propagation_delay_count
 " >> /etc/datadog-agent/conf.d/prometheus.d/conf.yaml
 service datadog-agent restart
 EOF
