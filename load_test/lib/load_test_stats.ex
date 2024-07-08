@@ -57,7 +57,7 @@ defmodule LoadTestStats do
   end
 
   def inc_msg_received_unexpected_message() do
-    Gauge.inc(name: :messages, labels: [:received, :unepected_message])
+    Gauge.inc(name: :messages, labels: [:received, :unexpected_message])
   end
 
   def inc_msg_received_http_error() do
