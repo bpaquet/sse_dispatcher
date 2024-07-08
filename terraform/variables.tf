@@ -57,6 +57,6 @@ variable "ssl_secret" {
 }
 
 variable "acm_domain" {
-  type = string
+  type    = string
   default = ""
 }

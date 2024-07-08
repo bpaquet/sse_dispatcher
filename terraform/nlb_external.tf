@@ -50,7 +50,7 @@ resource "aws_lb_listener" "external-tls" {
   load_balancer_arn = aws_lb.external.arn
   port              = "443"
   protocol          = var.acm_domain != "" ? "TLS" : "TCP"
-  certificate_arn = var.acm_domain != "" ? data.aws_acm_certificate.certificate[0].arn : null
+  certificate_arn   = var.acm_domain != "" ? data.aws_acm_certificate.certificate[0].arn : null
 
   default_action {
     type             = "forward"
