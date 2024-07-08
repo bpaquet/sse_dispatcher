@@ -47,11 +47,11 @@ variable "max_size" {
   default = 10
 }
 
-variable "acm_domain" {
-  type = string
-}
-
 variable "health_check_min_cluster_size" {
   type    = number
   default = 1
+}
+
+variable "ssl_secret" {
+  type = string
 }

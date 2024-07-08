@@ -11,3 +11,6 @@ config :sse_dispatcher,
   prometheus_port: String.to_integer(System.get_env("PROMETHEUS_PORT") || "9000")
 
 config :sse_dispatcher, sse_timeout: String.to_integer(System.get_env("SSE_TIMEOUT") || "900000")
+
+config :sse_dispatcher, ssl_keyfile: System.get_env("SSL_KEYFILE")
+config :sse_dispatcher, ssl_certfile: System.get_env("SSL_CERTFILE")

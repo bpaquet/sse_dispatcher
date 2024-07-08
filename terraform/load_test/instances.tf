@@ -30,7 +30,6 @@ MIX_ENV=prod mix release
 ulimit -n 1000000
 
 ${data.terraform_remote_state.local.outputs.config}
-
 ${var.sse_dispatcher_config}
 
 export NB_USER=${var.nb_users}

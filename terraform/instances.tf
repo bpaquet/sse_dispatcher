@@ -8,7 +8,11 @@ service docker restart
 export EC2_CLUSTER_TAG=aws:autoscaling:groupName
 export EC2_CLUSTER_VALUE=${local.asg_group_name}
 
-docker run -d --network=host -e EC2_CLUSTER_TAG -e EC2_CLUSTER_VALUE --ulimit nofile=1000000:1000000 ${var.docker_image}
+mkdir /tmp/ssl
+aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.ssl_secret} | jq .SecretString -r | jq .KEY -r > /tmp/ssl/key
+aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.ssl_secret} | jq .SecretString -r | jq -r .CERT > /tmp/ssl/cert
+
+docker run -d --network=host -e EC2_CLUSTER_TAG -e EC2_CLUSTER_VALUE  -v /tmp/ssl:/tmp/ssl -e SSL_KEYFILE=/tmp/ssl/key -e SSL_CERTFILE=/tmp/ssl/cert --ulimit nofile=1000000:1000000 ${var.docker_image}
 
 aws secretsmanager get-secret-value --region="${var.region}" --secret-id=${var.dd_secret} | jq -r .SecretString > /tmp/secret
 
@@ -75,7 +79,10 @@ resource "aws_iam_policy" "sse_dispatcher_policy" {
       "Action": [
         "secretsmanager:GetSecretValue"
       ],
-      "Resource": "${var.dd_secret}"
+      "Resource": [
+        "${var.dd_secret}",
+        "${var.ssl_secret}"
+      ]
     },
     {
       "Effect": "Allow",

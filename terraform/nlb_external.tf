@@ -3,17 +3,7 @@ resource "aws_security_group" "external_lb" {
   vpc_id = data.aws_subnet.first_public.vpc_id
 }
 
-resource "aws_security_group_rule" "external_lb_inbound_http" {
-  type              = "ingress"
-  from_port         = 4000
-  to_port           = 4000
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.external_lb.id
-}
-
 resource "aws_security_group_rule" "external_lb_inbound_https" {
-  count             = var.acm_domain != "" ? 1 : 0
   type              = "ingress"
   from_port         = 443
   to_port           = 443
@@ -56,23 +46,10 @@ resource "aws_lb" "external" {
   }
 }
 
-resource "aws_lb_listener" "external" {
-  load_balancer_arn = aws_lb.external.arn
-  port              = "4000"
-  protocol          = "TCP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.external.arn
-  }
-}
-
 resource "aws_lb_listener" "external-tls" {
-  count             = var.acm_domain != "" ? 1 : 0
   load_balancer_arn = aws_lb.external.arn
   port              = "443"
-  protocol          = "TLS"
-  certificate_arn   = data.aws_acm_certificate.certificate[0].arn
+  protocol          = "TCP"
 
   default_action {
     type             = "forward"
