@@ -119,6 +119,7 @@ defmodule SseUser do
     rescue
       e ->
         Logger.error("#{header(state)} #{inspect(e)}")
+        LoadTestStats.inc_msg_received_error()
     end
   end
 end
