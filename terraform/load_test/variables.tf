@@ -34,5 +34,4 @@ variable "sse_dispatcher_revision" {
 
 variable "sse_dispatcher_config" {
   type    = string
-  default = ""
 }

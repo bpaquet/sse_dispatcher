@@ -14,22 +14,36 @@ defmodule SSEDispatcher.Application do
     Logger.warning("Current host #{node()}")
 
     Logger.warning(
-      "Starting SSEDispatcher on port #{sse_port} for SSE, #{rest_port} for REST, #{prometheus_port} for Prometheus"
+      "Starting HTTP Server #{rest_port} for REST, #{prometheus_port} for Prometheus"
     )
+
+    {:ok, ssl_keyfile} = Application.fetch_env(:sse_dispatcher, :ssl_keyfile)
+    {:ok, ssl_certfile} = Application.fetch_env(:sse_dispatcher, :ssl_certfile)
+
+    base_sse_http_config = [
+      port: sse_port,
+      protocol_options: [idle_timeout: :infinity],
+      transport_options: [max_connections: :infinity]
+    ]
+
+    {sse_http_scheme, sse_http_config} = if ssl_keyfile != nil do
+        Logger.warning(
+          "Starting HTTPS Server #{sse_port}, with keyfile: #{ssl_keyfile}, certfile: #{ssl_certfile}"
+        )
+
+        http_config = Keyword.merge(base_sse_http_config, [keyfile: ssl_keyfile, certfile: ssl_certfile, otp_app: :sse_dispatcher])
+        {:https, http_config}
+      else
+        Logger.warning("Starting HTTP Server #{sse_port} without SSL")
+        {:http, base_sse_http_config}
+      end
 
     children = [
       {Phoenix.PubSub,
        name: SSEDispatcher.PubSub, options: [adapter: Phoenix.PubSub.PG2, pool_size: 10]},
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: rest_port]},
       {Plug.Cowboy, scheme: :http, plug: Prom, options: [port: prometheus_port]},
-      {Plug.Cowboy,
-       scheme: :http,
-       plug: Sse,
-       options: [
-         port: sse_port,
-         protocol_options: [idle_timeout: :infinity],
-         transport_options: [max_connections: :infinity]
-       ]}
+      {Plug.Cowboy, scheme: sse_http_scheme, plug: Sse, options: sse_http_config}
     ]
 
     MetricsPlugExporter.setup()
