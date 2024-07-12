@@ -71,6 +71,27 @@ defmodule SSEDispatcher.Application do
 
   defp add_cluster_supervisor(children) do
     cond do
+      System.get_env("K8S_SELECTOR") && System.get_env("K8S_NAMESPACE") ->
+        Logger.info(
+          "Starting libcluster with K8S selector: #{System.get_env("K8S_SELECTOR")} in namespace: #{System.get_env("K8S_NAMESPACE")}"
+        )
+
+        topologies = [
+          k8s: [
+            strategy: Cluster.Strategy.Kubernetes,
+            config: [
+              mode: :ip,
+              kubernetes_ip_lookup_mode: :pods,
+              kubernetes_node_basename: "sse_dispatcher",
+              kubernetes_selector: System.get_env("K8S_SELECTOR"),
+              kubernetes_namespace: System.get_env("K8S_NAMESPACE"),
+              polling_interval: 10_000,
+            ]
+          ]
+        ]
+
+        children ++ [{Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}]
+
       System.get_env("EPMD_CLUSTER_MEMBERS") ->
         Logger.info(
           "Starting libcluster with EMPD_CLUSTER_MEMBERS: #{System.get_env("EPMD_CLUSTER_MEMBERS")}"

@@ -2,6 +2,9 @@ ARG BUILDER_IMAGE=elixir:1.16.1-slim
 
 FROM ${BUILDER_IMAGE} AS builder
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git ca-certificates
+
 RUN mkdir /app
 WORKDIR /app
 ENV MIX_ENV=prod
@@ -19,7 +22,7 @@ RUN mix release
 FROM ${BUILDER_IMAGE}
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends haproxy curl
+  && apt-get install -y --no-install-recommends haproxy curl dnsutils
 
 RUN mkdir /app
 WORKDIR /app
