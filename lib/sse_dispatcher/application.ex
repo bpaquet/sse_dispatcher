@@ -85,7 +85,7 @@ defmodule SSEDispatcher.Application do
               kubernetes_node_basename: "sse_dispatcher",
               kubernetes_selector: System.get_env("K8S_SELECTOR"),
               kubernetes_namespace: System.get_env("K8S_NAMESPACE"),
-              polling_interval: 10_000,
+              polling_interval: 10_000
             ]
           ]
         ]
