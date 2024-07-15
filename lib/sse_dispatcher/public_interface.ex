@@ -1,10 +1,10 @@
-defmodule Sse do
+defmodule SseDispatcher.PublicInterface.Endpoint do
   require Logger
   import Plug.Conn
   use Plug.Router
 
   plug(:monitor_sse)
-
+  plug(SseDispatcher.PublicInterface.JwtAuthPlug)
   plug(:match)
   plug(:dispatch)
 
@@ -15,17 +15,21 @@ defmodule Sse do
   end
 
   get "/sse/:topic" do
-    conn = put_resp_header(conn, "content-type", "text/event-stream")
-    conn = put_resp_header(conn, "cache-control", "no-cache")
-    conn = put_resp_header(conn, "connection", "close")
-    conn = put_resp_header(conn, "access-control-allow-origin", "*")
-    conn = put_resp_header(conn, "x-sse-server", to_string(node()))
+    conn =
+      conn
+      |> put_resp_header("content-type", "text/event-stream")
+      |> put_resp_header("cache-control", "no-cache")
+      |> put_resp_header("connection", "close")
+      |> put_resp_header("access-control-allow-origin", "*")
+      |> put_resp_header("x-sse-server", to_string(node()))
+
     :ok = Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
+
     conn = send_chunked(conn, 200)
 
     Logger.debug("Client subscribed to #{topic}")
 
-    loop(conn, Application.fetch_env!(:sse_dispatcher, :sse_timeout))
+    conn |> loop(Application.fetch_env!(:sse_dispatcher, :sse_timeout))
     Logger.debug("Client disconnected from #{topic}")
     conn
   end
@@ -47,7 +51,6 @@ defmodule Sse do
 
   defp monitor_sse(conn, _) do
     {:ok, _pid} = SSEMonitor.start_link(conn)
-
     conn
   end
 end
