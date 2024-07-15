@@ -1,8 +1,8 @@
 #!/bin/sh -e
 
-echo "*** SSE Dispatcher"
+echo "*** SSE Dispatcher ***"
 
-if [ -z "$USE_HAPROXY" ]; then
+if [ "$USE_HAPROXY" != "" ]; then
   echo "Starting Haproxy"
   cat "$SSL_CERTFILE" "$SSL_KEYFILE" > /tmp/combined.pem
   haproxy -c -f /haproxy.cfg
@@ -13,5 +13,12 @@ if [ -z "$USE_HAPROXY" ]; then
   unset SSL_CERTFILE
 fi
 
-echo "Starting Elixir daemon"
+if [ "$POD_IP" != "" ]; then
+  export RELEASE_DISTRIBUTION="name"
+  export RELEASE_NODE="sse_dispatcher@${POD_IP}"
+  echo "Starting Elixir daemon, node: $RELEASE_NODE"
+else
+  echo "Starting Elixir daemon"
+fi
+
 exec /app/bin/sse_dispatcher start
