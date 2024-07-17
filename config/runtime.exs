@@ -17,7 +17,7 @@ config :sse_dispatcher, ssl_certfile: System.get_env("SSL_CERTFILE")
 
 config :sse_dispatcher,
   public_issuers: [
-    siilo: """
+    test_issuer1: """
     -----BEGIN PUBLIC KEY-----
     MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA2jYkfKh6+HGq+1p9i3Ky
     DvFTyWNO376RnrcaDx5vodfXI4Y5ZQlWk2oTiGjZ4nBUQoL0y0LvMScH1CjCqj2m
@@ -33,5 +33,5 @@ config :sse_dispatcher,
     xAIiArySRWYbW9PthSivYssCAwEAAQ==
     -----END PUBLIC KEY-----
     """,
-    monolith: "XXXX"
+    test_issuer2: "XXXX"
   ]

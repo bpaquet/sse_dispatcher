@@ -1,37 +1,46 @@
-defmodule SseDispatcher.PublicInterface.Endpoint do
+defmodule SseDispatcher.PublicInterface do
   require Logger
   import Plug.Conn
   use Plug.Router
 
   plug(:monitor_sse)
-  plug(SseDispatcher.PublicInterface.JwtAuthPlug)
+
+  plug(SseDispatcher.JwtAuthPlug,
+    allowed_algorithm: "RS256",
+    jwk_provider: &SseDispatcher.Configuration.public_issuer_jwks/0,
+    max_expiration: 60 * 2,
+    audience: "public_interface"
+  )
+
   plug(:match)
   plug(:dispatch)
 
-  get "/ping" do
-    conn
-    |> put_resp_header("content-type", "text/html")
-    |> send_resp(200, "ok")
-  end
+  get "v1/subscribe" do
+    case conn.assigns[:jwt_payload] do
+      %{"iss" => issuer, "sub" => sub} ->
+        topic = "#{issuer}:#{sub}"
 
-  get "/sse/:topic" do
-    conn =
-      conn
-      |> put_resp_header("content-type", "text/event-stream")
-      |> put_resp_header("cache-control", "no-cache")
-      |> put_resp_header("connection", "close")
-      |> put_resp_header("access-control-allow-origin", "*")
-      |> put_resp_header("x-sse-server", to_string(node()))
+        conn =
+          conn
+          |> put_resp_header("content-type", "text/event-stream")
+          |> put_resp_header("cache-control", "no-cache")
+          |> put_resp_header("connection", "close")
+          |> put_resp_header("access-control-allow-origin", "*")
+          |> put_resp_header("x-sse-server", to_string(node()))
 
-    :ok = Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
+        :ok = Phoenix.PubSub.subscribe(SSEDispatcher.PubSub, topic)
 
-    conn = send_chunked(conn, 200)
+        conn = send_chunked(conn, 200)
 
-    Logger.debug("Client subscribed to #{topic}")
+        Logger.debug("Client subscribed to #{topic}")
 
-    conn |> loop(Application.fetch_env!(:sse_dispatcher, :sse_timeout))
-    Logger.debug("Client disconnected from #{topic}")
-    conn
+        conn |> loop(Application.fetch_env!(:sse_dispatcher, :sse_timeout))
+        Logger.debug("Client disconnected from #{topic}")
+        conn
+
+      _ ->
+        conn.resp(:bad_request, "sub claim is missing")
+    end
   end
 
   defp loop(conn, sse_timeout) do

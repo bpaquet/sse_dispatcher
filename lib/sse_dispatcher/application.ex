@@ -52,9 +52,7 @@ defmodule SSEDispatcher.Application do
       {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: rest_port]},
       {Plug.Cowboy, scheme: :http, plug: Prom, options: [port: prometheus_port]},
       {Plug.Cowboy,
-       scheme: sse_http_scheme,
-       plug: SseDispatcher.PublicInterface,
-       options: sse_http_config}
+       scheme: sse_http_scheme, plug: SseDispatcher.PublicInterface, options: sse_http_config}
     ]
 
     MetricsPlugExporter.setup()
