@@ -36,7 +36,7 @@ defmodule SSEDispatcher.MixProject do
       {:libcluster_ec2, "~> 0.5"},
       {:prometheus_ex, "~> 3.1"},
       {:prometheus_plugs, "~> 1.0"},
-      {:joken, "~> 2.6"},
+      {:jose, "~> 1.11"},
       {:jason, "~> 1.4"}
     ]
   end
