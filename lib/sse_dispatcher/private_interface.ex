@@ -1,11 +1,19 @@
-defmodule Rest do
+defmodule SseDispatcher.PrivateInterface do
   require Logger
   require Node
   import Plug.Conn
   use Plug.Router
   plug(MetricsPlugExporter)
 
+  plug(SseDispatcher.JwtAuthPlug,
+    allowed_algorithm: "HS256",
+    jwk_provider: &SseDispatcher.Configuration.private_issuer_jwks/1,
+    max_lifetime: 60 * 2,
+    audience: "private_interface"
+  )
+
   plug(:match)
+  plug(Plug.Parsers, parsers: [:json], json_decoder: Jason)
   plug(:dispatch)
 
   get "/" do
@@ -20,7 +28,7 @@ defmodule Rest do
     |> send_resp(200, "ok")
   end
 
-  get "/nodes" do
+  get "v1/nodes" do
     nodes = Node.list()
 
     conn
@@ -31,7 +39,7 @@ defmodule Rest do
     )
   end
 
-  get "/cluster_size_above/:size" do
+  get "v1/cluster_size_above/:size" do
     size = String.to_integer(size)
     cluster_size = length(Node.list()) + 1
 
@@ -40,12 +48,18 @@ defmodule Rest do
     |> send_resp((cluster_size >= size && 200) || 404, "Cluster size: #{cluster_size}\n")
   end
 
-  post "/publish/:topic" do
+  post "v1/publish" do
+
+    issuer = conn.assigns[:jwt_payload]["iss"]
+
+    topic = "#{issuer}-#{conn.body_params["topic"]}"
+    message = conn.body_params["message"]
+
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     message_id = to_string(:os.system_time(:millisecond))
 
     :ok =
-      Phoenix.PubSub.broadcast!(SSEDispatcher.PubSub, topic, {:pubsub_message, message_id, body})
+      Phoenix.PubSub.broadcast!(SSEDispatcher.PubSub, topic, {:pubsub_message, message_id, message})
 
     Logger.debug("Message published on topic: #{topic}")
     SSEStats.inc_msg_received()

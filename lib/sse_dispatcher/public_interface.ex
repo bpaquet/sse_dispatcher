@@ -7,7 +7,7 @@ defmodule SseDispatcher.PublicInterface do
 
   plug(SseDispatcher.JwtAuthPlug,
     allowed_algorithm: "RS256",
-    jwk_provider: &SseDispatcher.Configuration.public_issuer_jwk/1,
+    jwk_provider: &SseDispatcher.Configuration.public_issuer_jwks/1,
     max_lifetime: 60 * 2,
     audience: "public_interface"
   )
@@ -19,6 +19,8 @@ defmodule SseDispatcher.PublicInterface do
     case conn.assigns[:jwt_payload] do
       %{"iss" => issuer, "sub" => sub} ->
         topic = "#{issuer}-#{sub}"
+
+        IO.puts("Private interface #{topic}")
 
         conn =
           conn
@@ -39,7 +41,7 @@ defmodule SseDispatcher.PublicInterface do
         conn
 
       _ ->
-        conn |> resp(:bad_request, "some JWT claims are missing")
+        conn |> resp(:bad_request, "expected JWT claims are missing")
     end
   end
 

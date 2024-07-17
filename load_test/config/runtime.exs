@@ -10,7 +10,7 @@ config :load_test, sse_timeout: String.to_integer(System.get_env("SSE_TIMEOUT") 
 config :load_test, sse_base_url: System.get_env("SSE_BASE_URL") || "http://localhost:4000/v1/subscribe"
 
 config :load_test,
-  rest_base_url: System.get_env("REST_BASE_URL") || "http://localhost:3000/publish"
+  rest_base_url: System.get_env("REST_BASE_URL") || "http://localhost:3000/v1/publish"
 
 config :load_test, rest_timeout: String.to_integer(System.get_env("REST_TIMEOUT") || "5000")
 

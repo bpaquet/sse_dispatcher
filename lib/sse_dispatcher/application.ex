@@ -49,7 +49,7 @@ defmodule SSEDispatcher.Application do
       SseDispatcher.Configuration,
       {Phoenix.PubSub,
        name: SSEDispatcher.PubSub, options: [adapter: Phoenix.PubSub.PG2, pool_size: 10]},
-      {Plug.Cowboy, scheme: :http, plug: Rest, options: [port: rest_port]},
+      {Plug.Cowboy, scheme: :http, plug: SseDispatcher.PrivateInterface, options: [port: rest_port]},
       {Plug.Cowboy, scheme: :http, plug: Prom, options: [port: prometheus_port]},
       {Plug.Cowboy,
        scheme: sse_http_scheme, plug: SseDispatcher.PublicInterface, options: sse_http_config}

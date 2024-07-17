@@ -34,4 +34,8 @@ config :sse_dispatcher,
     -----END PUBLIC KEY-----
     """,
     test_issuer2: "XXXX"
+  ],
+  private_issuers: [
+    test_issuer1: "nLjJdNLlpdv3W4Xk7MyVCAZKD-hvza6FQ4yhUUFnjmg",
+    test_issuer2: "XXXX"
   ]

@@ -194,7 +194,6 @@ defmodule SseUser do
 
   defp jwt_token(user_name) do
 
-
     iat = :os.system_time(:second)
     exp = iat + (2*60 -1)
     issuer = "test_issuer1"

@@ -108,7 +108,7 @@ defmodule Main do
 
   defp run_injector(context, user_name, topic, messages) do
     try do
-      InjectorUser.start(context, user_name, "#{context.rest_base_url}/#{topic}", messages)
+      InjectorUser.start(context, user_name, "#{context.rest_base_url}", messages)
 
       :ok
     rescue

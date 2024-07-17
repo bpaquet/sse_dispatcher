@@ -8,7 +8,8 @@ defmodule InjectorUser do
       :rest_timeout,
       :delay_between_messages_min,
       :delay_between_messages_max,
-      :start_time
+      :start_time,
+      :jwk
     ]
   end
 
@@ -27,7 +28,8 @@ defmodule InjectorUser do
       rest_timeout: context.rest_timeout,
       delay_between_messages_min: context.delay_between_messages_min,
       delay_between_messages_max: context.delay_between_messages_max,
-      start_time: start_time
+      start_time: start_time,
+      jwk: jwk()
     }
 
     Logger.info(fn ->
@@ -54,7 +56,13 @@ defmodule InjectorUser do
     :timer.sleep(sleep)
 
     raw_message =
-      "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{state.publish_url}"
+
+
+
+    {:ok, request_payload} = Jason.encode(%{
+      topic: state.user_name,
+      message: "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{state.publish_url}"
+    })
 
 
     Logger.debug(fn ->
@@ -62,11 +70,12 @@ defmodule InjectorUser do
     end)
 
     headers = [
-      {"Content-Type", "application/octet-stream"}
+      {"Content-Type", "application/json"},
+      {"Authorization", "Bearer #{jwt_token(state.jwk)}"}
     ]
 
     result =
-      Finch.build(:post, state.publish_url, headers, raw_message)
+      Finch.build(:post, state.publish_url, headers, request_payload)
       |> Finch.request(PublishFinch,
         receive_timeout: state.rest_timeout,
         pool_timeout: state.rest_timeout
@@ -96,5 +105,34 @@ defmodule InjectorUser do
     end
 
     run(state, messages)
+  end
+
+
+  defp jwk() do
+    shared_secret= "nLjJdNLlpdv3W4Xk7MyVCAZKD-hvza6FQ4yhUUFnjmg"
+    JOSE.JWK.from_oct(shared_secret)
+  end
+
+  defp jwt_token(jwk) do
+
+    iat = :os.system_time(:second)
+    exp = iat + (2*60 -1)
+    issuer = "test_issuer1"
+
+    jws = %{
+      "alg" => "HS256"
+    }
+
+    jwt = %{
+      "iss" => issuer,
+      "exp" => exp,
+      "iat" => iat,
+      "aud" => "private_interface"
+    }
+
+    signed = JOSE.JWT.sign(jwk, jws, jwt)
+    {%{alg: :jose_jws_alg_hmac}, compact_signed} = JOSE.JWS.compact(signed)
+
+    compact_signed
   end
 end
