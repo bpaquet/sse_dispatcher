@@ -20,8 +20,6 @@ defmodule SseDispatcher.PublicInterface do
       %{"iss" => issuer, "sub" => sub} ->
         topic = "#{issuer}-#{sub}"
 
-        IO.puts("# public interface, topic = #{topic}")
-
         conn =
           conn
           |> put_resp_header("content-type", "text/event-stream")

@@ -44,8 +44,6 @@ defmodule Rest do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     message_id = to_string(:os.system_time(:millisecond))
 
-    IO.puts("# private interface, topic = #{topic}")
-
     :ok =
       Phoenix.PubSub.broadcast!(SSEDispatcher.PubSub, topic, {:pubsub_message, message_id, body})
 
