@@ -77,8 +77,11 @@ defmodule Main do
         context.number_of_messages_min
 
     messages = Enum.map(1..number_of_messages, fn _ -> UUID.uuid4() end)
-    topic = "topic_#{UUID.uuid4()}"
-    user_name = "user_#{UUID.uuid4()}"
+
+    #WIP, this will be passed as a POST payload, and the backend will be in charge of namespacing topics"
+    random_id = UUID.uuid4()
+    topic = "test_issuer1-user_#{random_id}"
+    user_name = "user_#{random_id}"
 
     sse_task =
       Task.Supervisor.async(LoadTest.TaskSupervisor, fn ->

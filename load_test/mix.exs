@@ -36,7 +36,7 @@ defmodule LoadTest.MixProject do
       {:parent, "~> 0.12"},
       {:uuid, "~> 1.1"},
       {:finch, "~> 0.18"},
-      {:joken, "~> 2.6"},
+      {:jose, "~> 1.11"},
       {:jason, "~> 1.4"}
     ]
   end

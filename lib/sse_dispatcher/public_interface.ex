@@ -18,7 +18,9 @@ defmodule SseDispatcher.PublicInterface do
   get "v1/subscribe" do
     case conn.assigns[:jwt_payload] do
       %{"iss" => issuer, "sub" => sub} ->
-        topic = "#{issuer}:#{sub}"
+        topic = "#{issuer}-#{sub}"
+
+        IO.puts("# public interface, topic = #{topic}")
 
         conn =
           conn

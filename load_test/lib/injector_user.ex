@@ -56,6 +56,7 @@ defmodule InjectorUser do
     raw_message =
       "#{:os.system_time(:millisecond)} #{first_message} #{length(messages)} #{state.publish_url}"
 
+
     Logger.debug(fn ->
       "injector_#{state.user_name}: Publishing #{inspect(raw_message)}, remaining #{length(messages)}"
     end)
