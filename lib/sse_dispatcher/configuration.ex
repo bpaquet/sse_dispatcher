@@ -5,8 +5,8 @@ defmodule SseDispatcher.Configuration do
     GenServer.start_link(__MODULE__, default, name: __MODULE__)
   end
 
-  def public_issuer_jwks do
-    GenServer.call(__MODULE__, :public_issuer_jwks)
+  def public_issuer_jwk(issuer_name) do
+    GenServer.call(__MODULE__, {:public_issuer_jwks, issuer_name})
   end
 
   @impl true
@@ -15,8 +15,8 @@ defmodule SseDispatcher.Configuration do
   end
 
   @impl true
-  def handle_call(:public_issuer_jwks, _from, state) do
-    {:reply, state[:public_issuer_jwks], state}
+  def handle_call({:public_issuer_jwks, issuer_name},  _from, state) do
+    {:reply, state[:public_issuer_jwks][issuer_name], state}
   end
 
   defp build_public_issuer_jwks do

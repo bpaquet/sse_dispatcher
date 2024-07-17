@@ -7,8 +7,8 @@ defmodule SseDispatcher.PublicInterface do
 
   plug(SseDispatcher.JwtAuthPlug,
     allowed_algorithm: "RS256",
-    jwk_provider: &SseDispatcher.Configuration.public_issuer_jwks/0,
-    max_expiration: 60 * 2,
+    jwk_provider: &SseDispatcher.Configuration.public_issuer_jwk/1,
+    max_lifetime: 60 * 2,
     audience: "public_interface"
   )
 
@@ -39,7 +39,7 @@ defmodule SseDispatcher.PublicInterface do
         conn
 
       _ ->
-        conn.resp(:bad_request, "sub claim is missing")
+        conn |> resp(:bad_request, "some JWT claims are missing")
     end
   end
 

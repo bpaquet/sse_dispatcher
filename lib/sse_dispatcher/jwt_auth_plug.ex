@@ -1,9 +1,14 @@
 defmodule SseDispatcher.JwtAuthPlug do
+
+  require Logger
+
   import Plug.Conn
 
   def init(options), do: options
 
   def call(conn, options) do
+
+
     case jwt_token_from_request(conn) do
       {:ok, jwt_token_str} ->
         case parse_jwt_token(jwt_token_str) do
@@ -64,7 +69,7 @@ defmodule SseDispatcher.JwtAuthPlug do
   defp fetch_jwk_from_issuer(payload, options) do
     case payload do
       %JOSE.JWT{fields: %{"iss" => issuer}} ->
-        jwk = options[:jwk_provider].()[issuer]
+        jwk = options[:jwk_provider].(issuer)
 
         if jwk != nil do
           {:ok, jwk}
@@ -87,8 +92,8 @@ defmodule SseDispatcher.JwtAuthPlug do
   defp check_expiration(payload, options) do
     case payload do
       %JOSE.JWT{fields: %{"exp" => exp, "iat" => iat}} when exp > iat ->
-        if exp - iat > options[:max_expiration] do
-          {:error, :too_long_exp, "Expiration delay is too long than expected"}
+        if exp - iat > options[:max_lifetime] do
+          {:error, :too_long_lifetime, "Token lifetem is too long than expected"}
         else
           if exp > :os.system_time(:second) do
             {:ok}
@@ -117,6 +122,8 @@ defmodule SseDispatcher.JwtAuthPlug do
   end
 
   defp forbidden(conn, error_code, error_message) do
+
+    Logger.error("JWT auth check error: #{error_code}")
     {:ok, response} =
       Jason.encode(%{
         errors: [
